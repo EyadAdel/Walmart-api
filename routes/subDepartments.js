@@ -34,8 +34,7 @@ router.post("/", async (req, res, next) => {
     }
     catch (err){
         res.status(422).json({message: err.message})
-    }
-    
+    }  
 })
 
 // update sub-department
