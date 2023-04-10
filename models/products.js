@@ -26,12 +26,16 @@ const productSchema = mongoose.Schema({
         warranty:String,
         departmentID:{
             type:mongoose.SchemaTypes.ObjectId,
-            ref:'department'
+            ref:'department',
+            required: true
         },
         subDepartmentID:{
             type: mongoose.SchemaTypes.ObjectId,
             ref: 'SubDepartment',
             required:true
+        },
+        nestedSubDepartment:{
+            type:mongoose.SchemaTypes.ObjectId,
         },
         sellerID:{
             type:mongoose.SchemaTypes.ObjectId,
