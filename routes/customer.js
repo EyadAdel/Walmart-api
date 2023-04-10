@@ -15,10 +15,10 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-//Get firstname, email of all customers
+//Get all customers
 router.get('/', async (req, res, next) => {
     try {
-        const customersEmail = await customerModel.find({}, { _id: 0, firstName: 1 , email: 1 });
+        const customersEmail = await customerModel.find({});
         res.status(200).json(customersEmail)
     } catch (err) {
         res.status(500).json({ message: err.message })

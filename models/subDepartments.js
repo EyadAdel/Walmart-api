@@ -1,17 +1,25 @@
 const mongoose = require('mongoose');
 
 const subDepartmentSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  department: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'department',
-    required: true,
-  }
+    name: { //computer
+      type: String,
+      required: true,
+    },
+    subcategories: [ //laptops, pc, ipad, ...
+      {
+        name: {
+          type: String,
+          required: true,
+        }
+      }
+    ],
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'department',
+      required: true,
+    }
 });
 
-const SubDepartment = mongoose.model('SubDepartment', subDepartmentSchema);
+const SubDepartmentModel = mongoose.model('SubDepartment', subDepartmentSchema);
 
-module.exports = SubDepartment;
+module.exports = SubDepartmentModel;
