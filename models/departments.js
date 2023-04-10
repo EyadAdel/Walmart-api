@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
 
 const departmentSchema = mongoose.Schema({
-    name: String, // the name of the department
-    parent_id: {
+    name: String, 
+    subDepartments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SubDepartment',
+      }],
+    products: [{
         type:mongoose.SchemaTypes.ObjectId,
-        default: null
-    },
-    products: [{type:mongoose.SchemaTypes.ObjectId}], // an array of ids of products directly belonging to this department
+        ref: "product"
+    }], 
       
 },{timestamps:true})
 
