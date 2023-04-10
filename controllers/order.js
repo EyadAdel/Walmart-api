@@ -1,22 +1,60 @@
-const orderModel = require("../models/orders")
+const orderModel = require("../models/orders");
 
-function getAllOrders() {
-    return orderModel.find();
+const getAllOrders = async (req, res, next) => {
+  try {
+    var newOrder = await orderModel.find();
+    res.status(200).json(newOrder);
+  } catch (err) {
+    res.json({ message: err.message });
   }
-  function AddnewOrder(order) {
-    return orderModel.create(order);
+};
+const AddnewOrder = async (req, res, next) => {
+  var seller = req.body;
+  try {
+    var addededOrder = await AddnewOrder(seller);
+    res.status(201).json(addededOrder);
+  } catch (err) {
+    res.status(422).json({ message: err.message });
   }
-  
-  function getOrderById(id) {
-    return orderModel.findById(id);
-  }
-  
-  function updateOrderById(id, obj) {
-    return orderModel.findByIdAndUpdate(id, obj, { new: true });//new(options) if true, return the modified document rather than the original
-  }
-  
-  function deleteOrder(id) {
-    return orderModel.findByIdAndDelete(id);
-  }
+};
 
-  module.exports={AddnewOrder,getAllOrders,getOrderById,updateOrderById,deleteOrder}
+const getOrderById = async (req, res, next) => {
+  var { id } = req.params;
+  try {
+    var specificOrder = await orderModel.findById(id);
+    res.status(200).json(specificOrder);
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+};
+
+const updateOrderById = async (req, res) => {
+  var id = req.params.id;
+  var obj = req.body;
+  try {
+    let updatedOrder = await orderModel.findByIdAndUpdate(id, obj, {
+      new: true,
+    });
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(422).json({ message: err.message });
+  }
+};
+
+const deleteOrder = async (req, res) => {
+  var id = req.params.id;
+  try {
+    let deletedSeller = await orderModel.findByIdAndDelete(id);
+    res.json("Order Deleted Successfully");
+  } catch (err) {
+    res.status(422).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  AddnewOrder,
+  getAllOrders,
+  getOrderById,
+  updateOrderById,
+  deleteOrder,
+};
