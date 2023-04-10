@@ -9,11 +9,7 @@ const subDepartmentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'department',
     required: true,
-  },
-  products: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'product',
-  }],
+  }
 });
 
 const SubDepartment = mongoose.model('SubDepartment', subDepartmentSchema);

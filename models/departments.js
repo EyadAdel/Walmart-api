@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 
 const departmentSchema = mongoose.Schema({
-    name: String, 
+    name: {
+        type: String,
+        required: true,
+        unique: true
+    }, 
     subDepartments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'SubDepartment',
-      }],
-    products: [{
-        type:mongoose.SchemaTypes.ObjectId,
-        ref: "product"
-    }], 
+      }]
       
 },{timestamps:true})
 

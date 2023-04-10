@@ -24,13 +24,19 @@ const productSchema = mongoose.Schema({
         productDetails:{type:String,required:true},
         specifications:[{type:Object, required:true}],
         warranty:String,
-        catID:{
+        departmentID:{
             type:mongoose.SchemaTypes.ObjectId,
-            ref:'departments'
+            ref:'department'
+        },
+        subDepartmentID:{
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: 'SubDepartment',
+            required:true
         },
         sellerID:{
             type:mongoose.SchemaTypes.ObjectId,
-            ref:'seller'
+            ref:'seller',
+            required:true
         }
 }, {timestamps:true}); 
 
