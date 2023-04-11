@@ -1,11 +1,15 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const departmentSchema = mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        unique: true
-    }
+const departmentSchema = mongoose.Schema(
+  {
+    name: String,
+    subDepartments: [{ name: String, subSubDepartments: [{ name: String }] }],
+
+    // name: {
+    //     type: String,
+    //     required: true,
+    //     unique: true
+    // }
     //when we add new department how we will add the subdepartments ?
     // we didn't have any departments added yet
 
@@ -14,8 +18,9 @@ const departmentSchema = mongoose.Schema({
     //     ref: 'SubDepartment',
     //     required:true
     // }]
-      
-},{timestamps:true})
+  },
+  { timestamps: true }
+);
 
-const departmentModel = mongoose.model('department',departmentSchema)
+const departmentModel = mongoose.model("department", departmentSchema);
 module.exports = departmentModel;
