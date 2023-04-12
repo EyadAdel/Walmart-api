@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const subDepartmentSchema = new mongoose.Schema({
   parentID: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
+    ref: "department",
     required: true,
   },
   name: {
@@ -12,6 +12,6 @@ const subDepartmentSchema = new mongoose.Schema({
   },
 });
 
-const SubDepartmentModel = mongoose.model("SubDepartment", subDepartmentSchema);
+const SubDepartmentModel = mongoose.model("subDepartment", subDepartmentSchema);
 
 module.exports = SubDepartmentModel;

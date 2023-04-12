@@ -8,7 +8,8 @@ const reviewsRoutes = require("./routes/reviews");
 const adminRoutes = require("./routes/admin");
 const sellerRoutes = require("./routes/seller");
 const departmentsRoutes = require("./routes/deprtments");
-const subDepartmentsRoutes = require("./routes/subDepartments")
+const subDepartmentsRoutes = require("./routes/subDepartments");
+const subSubDepartmentsRoutes = require("./routes/subSubDepartment");
 const orderRoutes = require("./routes/orders");
 
 const exp = require("constants");
@@ -32,7 +33,8 @@ app.use("/reviews", reviewsRoutes);
 app.use("/admin", adminRoutes);
 app.use("/seller", sellerRoutes);
 app.use("/department", departmentsRoutes);
-app.use("/subDepartments",subDepartmentsRoutes);
+app.use("/subDepartments", subDepartmentsRoutes);
+app.use("/subSubDepartments", subSubDepartmentsRoutes);
 app.use("/order", orderRoutes);
 
 //Backend Server || Port

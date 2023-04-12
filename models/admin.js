@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 var adminSchema = mongoose.Schema(
   {
@@ -47,12 +48,31 @@ var adminSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-adminSchema.pre("save", function (next) {
-  const salt = bcrypt.genSaltSync(10);
-  const hashedPassword = bcrypt.hashSync(this.password, salt);
-  this.password = hashedPassword;
+adminSchema.pre("save", async function (next) {
+  try {
+    if (!this.isModified("password")) {
+      next();
+      return;
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
   next();
 });
+
+adminSchema.methods.generateAuthToken = async function () {
+  const admin = this;
+  const token = jwt.sign({ _id: admin._id.toString() }, process.env.SECRET, {
+    expiresIn: "15d",
+  });
+  admin.tokens = admin.tokens.concat({ token });
+  await admin.save();
+  console.log(4);
+  return token;
+};
 
 var adminModel = mongoose.model("admin", adminSchema);
 module.exports = adminModel;

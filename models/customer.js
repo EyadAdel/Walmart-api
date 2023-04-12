@@ -69,11 +69,11 @@ const customerSchema = mongoose.Schema(
       type: Array,
     },
     lists: {
-      favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+      favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "product" }],
     },
     cart: [
       {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
         quantity: { type: Number, default: 1 },
       },
     ],
