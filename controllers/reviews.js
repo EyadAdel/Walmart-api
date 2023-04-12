@@ -9,6 +9,7 @@ const createdReview = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const getAllReviews = async (req, res, next) => {
   try {
     const allReviews = await reviewModel.find();
@@ -17,6 +18,31 @@ const getAllReviews = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+const getAllProductReviews = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const allProductReviews = await reviewModel
+      .find({ productID: id })
+      .populate("authorID", "firstName");
+    res.status(200).json(allProductReviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getAllSellerReviews = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const allSellerReviews = await reviewModel
+      .find({ sellerID: id })
+      .populate("authorID", "firstName");
+    res.status(200).json(allSellerReviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const updatedReview = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -29,6 +55,7 @@ const updatedReview = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const deletedReview = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -40,6 +67,8 @@ const deletedReview = async (req, res, next) => {
 };
 
 module.exports = {
+  getAllProductReviews,
+  getAllSellerReviews,
   createdReview,
   getAllReviews,
   updatedReview,

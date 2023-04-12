@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   AddnewCustomer,
+  checkPass,
   getAllCustomers,
   getCustomerByEmail,
   updateCustomerById,
@@ -9,8 +10,14 @@ const {
   customerLogin,
 } = require("../controllers/customer");
 
+//Customer login
+router.post("/login", customerLogin);
+
+// check the password
+router.post("/signin", checkPass);
+
 //To Create new Customer
-router.post("/", AddnewCustomer);
+router.post("/signup", AddnewCustomer);
 
 //Get all customers
 router.get("/", getAllCustomers);
@@ -23,8 +30,5 @@ router.patch("/:id", updateCustomerById);
 
 //Delete specific customer by id
 router.delete("/:id", deleteCustomerById);
-
-//Customer login
-router.post("/login", customerLogin);
 
 module.exports = router;

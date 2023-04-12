@@ -2,6 +2,7 @@ var express = require("express");
 const {
   getAllOrders,
   AddnewOrder,
+  createOrder,
   getOrderById,
   updateOrderById,
   deleteOrder,
@@ -13,6 +14,9 @@ router.get("/", getAllOrders);
 
 // get order by id
 router.get("/:id", getOrderById);
+
+// Create a new order
+router.post("/", createOrder);
 
 // add new order
 router.post("/", AddnewOrder);
