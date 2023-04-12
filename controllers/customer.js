@@ -1,77 +1,101 @@
-const customerModel= require('../models/customer');
-const bcrypt = require('bcrypt');
-const jwt = require("jsonwebtoken");
+const customerModel = require("../models/customer");
+const bcrypt = require("bcrypt");
+
+const customerLogin = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const customer = await customerModel.findOne({ email });
+    if (customer) {
+      res.status(201).send({ isFound: true });
+      return;
+    } else {
+      res.status(201).send({ isFound: false });
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error logging in customer: " + err.message);
+  }
+};
+
+const checkPass = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const customer = await customerModel.findOne({ email });
+    const isMatch = await bcrypt.compare(password, customer.password);
+    if (!isMatch) {
+      res.status(401).send("Invalid password");
+      return;
+    }
+    const token = await customer.generateAuthToken();
+    res.json({ customer, token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error check password of customer: " + err.message);
+  }
+};
 
 const AddnewCustomer = async (req, res, next) => {
-    try {
-        const customerData = req.body;
-        const newCustomer = await customerModel.create(customerData);
-        res.status(201).json(newCustomer);
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
+  try {
+    const customerData = req.body;
+    const newCustomer = await customerModel.create(customerData);
+    const token = await newCustomer.generateAuthToken();
+    res.status(201).json({ newCustomer, token });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const getAllCustomers = async (req, res, next) => {
-    try {
-        const customersEmail = await customerModel.find({});
-        res.status(200).json(customersEmail)
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
+  try {
+    const customersEmail = await customerModel.find({});
+    res.status(200).json(customersEmail);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const getCustomerByEmail = async (req, res, next) => {
-    try {
-        const {email} = req.params;
-        const customersEmail = await customerModel.find({email});
-        res.status(200).json(customersEmail)
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
+  try {
+    const { email } = req.params;
+    const customersEmail = await customerModel.find({ email });
+    res.status(200).json(customersEmail);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const updateCustomerById = async (req, res, next) => {
-    try {
-        const obj = req.body;
-        const {id}= req.params
-        const updateFirstNameOfCustomer = await customerModel.findByIdAndUpdate(id,obj, { new: true })
-        res.status(200).json(updateFirstNameOfCustomer)
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
+  try {
+    const obj = req.body;
+    const { id } = req.params;
+    const updateFirstNameOfCustomer = await customerModel.findByIdAndUpdate(
+      id,
+      obj,
+      { new: true }
+    );
+    res.status(200).json(updateFirstNameOfCustomer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const deleteCustomerById = async (req, res, next) => {
-    try {
-        const {id}= req.params
-        const deletedCustomer = await customerModel.deleteOne({_id:id})
-        res.status(200).json("Customer deleted successfully")
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-}
-const customerLogin = async (req, res, next) => {
-    try{
-        const { email, password } = req.body
-        const customer = await customerModel.findOne({email})
-        if (customer) {
-            const validPassword = bcrypt.compareSync(password, customer.password);
-            if (validPassword) {  
-                //Generate Token
-                var token= jwt.sign({
-                    customerID: customer._id,
-                    email: customer.email
-                },process.env.SECRET)
-                res.status(200 ).json(token);
-            } else {
-                res.status(401).json('Invalid Email or Password');
-            }
-        } else {
-            res.status(401).json('Email not found')
-        }
-    }catch(err){
-        res.json({message:err.message})
-    }
-}
-module.exports={AddnewCustomer,getAllCustomers,getCustomerByEmail,updateCustomerById,deleteCustomerById,customerLogin}
+  try {
+    const { id } = req.params;
+    const deletedCustomer = await customerModel.deleteOne({ _id: id });
+    res.status(200).json("Customer deleted successfully");
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  customerLogin,
+  checkPass,
+  AddnewCustomer,
+  getAllCustomers,
+  getCustomerByEmail,
+  updateCustomerById,
+  deleteCustomerById,
+};

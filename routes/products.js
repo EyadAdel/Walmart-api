@@ -2,21 +2,41 @@ const express = require("express");
 const {
   addProduct,
   getAllProducts,
+  getProductByDept,
   updateProdudtByID,
   deleteProductByID,
 } = require("../controllers/products");
 const router = express.Router();
-
-//Add New Product
-router.post("/", addProduct);
+const cloudinary = require("cloudinary");
+const fileUpload = require("express-fileupload");
 
 //Get All Products
 router.get("/", getAllProducts);
 
-//To update in specific product (update in any field)
-router.patch("/:id", updateProdudtByID);
+// Get a product by Department
+router.get("/dept/:id", getProductByDept);
 
 //To Delete specific Product
 router.delete("/:id", deleteProductByID);
+
+// handle cloudinary middleware in routes that need to upload photos
+router.use(
+  fileUpload({
+    useTempFiles: true,
+    limits: { fileSize: 5 * 1024 * 1024 },
+  })
+);
+
+cloudinary.config({
+  cloud_name: "dkqlixc3e",
+  api_key: "231758734662455",
+  api_secret: "qcuo5tmrZrAUuD9IMsURHfJxqx8",
+});
+
+//Add New Product
+router.post("/", addProduct);
+
+//To update in specific product (update in any field)
+router.patch("/:id", updateProdudtByID);
 
 module.exports = router;
