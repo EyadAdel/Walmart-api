@@ -12,7 +12,7 @@ const cloudinary = require("cloudinary");
 const fileUpload = require("express-fileupload");
 
 //Get All Products
-router.get("/all", getAllProducts);
+router.get("/", getAllProducts);
 
 //Get Products by id
 router.get("/:id", getProductByID);
