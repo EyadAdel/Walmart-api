@@ -46,6 +46,15 @@ const getAllProducts = async (req, res, next) => {
   }
 };
 
+const getProductByID = async (req, res, next) => {
+  try {
+    const allProducts = await productModel.findById(req.params.id);
+    res.status(200).json(allProducts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Get products by department
 const getProductByDept = async (req, res, next) => {
   try {
@@ -108,6 +117,7 @@ const deleteProductByID = async (req, res, next) => {
 module.exports = {
   addProduct,
   getAllProducts,
+  getProductByID,
   getProductByDept,
   updateProdudtByID,
   deleteProductByID,

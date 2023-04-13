@@ -2,6 +2,7 @@ const express = require("express");
 const {
   addProduct,
   getAllProducts,
+  getProductByID,
   getProductByDept,
   updateProdudtByID,
   deleteProductByID,
@@ -11,7 +12,10 @@ const cloudinary = require("cloudinary");
 const fileUpload = require("express-fileupload");
 
 //Get All Products
-router.get("/", getAllProducts);
+router.get("/all", getAllProducts);
+
+//Get Products by id
+router.get("/:id", getProductByID);
 
 // Get a product by Department
 router.get("/dept/:id", getProductByDept);
