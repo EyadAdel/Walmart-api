@@ -19,6 +19,9 @@ router.post("/signin", checkPass);
 //To Create new Customer
 router.post("/signup", AddnewCustomer);
 
+// add new address
+// router.post("/address",addAddress);
+
 //Get all customers
 router.get("/", getAllCustomers);
 

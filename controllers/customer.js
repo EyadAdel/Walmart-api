@@ -46,6 +46,11 @@ const AddnewCustomer = async (req, res, next) => {
   }
 };
 
+//TODO: complete it after adding token
+// const addAddress = async (req, res) => {
+//   const address = req.body;
+// };
+
 const getAllCustomers = async (req, res, next) => {
   try {
     const customersEmail = await customerModel.find({});

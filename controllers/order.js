@@ -22,10 +22,13 @@ const AddnewOrder = async (req, res, next) => {
 const getOrderById = async (req, res, next) => {
   var { id } = req.params;
   try {
-    var specificOrder = await orderModel.findById(id).populate("items.product");
+    var specificOrder = await orderModel
+      .findById(id)
+      .populate("customerID", "firstName email")
+      .populate("items.product", "name priceAfter");
     const totalPrice = await specificOrder.totalPrice;
-    console.log(totalPrice);
-    res.status(200).json(specificOrder);
+    // console.log(totalPrice);
+    res.status(200).json({ specificOrder, totalPrice });
   } catch (err) {
     res.json({ message: err.message });
   }
@@ -34,7 +37,7 @@ const getOrderById = async (req, res, next) => {
 const createOrder = async (req, res) => {
   try {
     // if (req.role == "customer") {
-    const order = new Order({
+    const order = new orderModel({
       // customerID: req.customer._id,
       ...req.body,
     });

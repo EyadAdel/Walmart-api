@@ -12,7 +12,8 @@ const AddnewAdmin = async (req, res, next) => {
   var admin = req.body;
   try {
     var savedAdmin = await adminModel.create(admin);
-    res.status(201).json(savedAdmin);
+    const token = await savedAdmin.generateAuthToken();
+    res.status(201).json({ savedAdmin, token });
   } catch (err) {
     res.status(422).json({ message: err.message });
   }

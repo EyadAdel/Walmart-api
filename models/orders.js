@@ -6,7 +6,7 @@ const ordersSchema = mongoose.Schema(
     // customerID: { type: mongoose.SchemaTypes.ObjectId }, // ID of the user who placed the order
     customerID: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: "customer",
       required: true,
     },
     items: [
@@ -14,7 +14,7 @@ const ordersSchema = mongoose.Schema(
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          ref: "product",
           required: true,
         },
         quantity: {
@@ -47,9 +47,8 @@ const ordersSchema = mongoose.Schema(
 
 // adding total price field
 ordersSchema.virtual("totalPrice").get(async function () {
-  console.log(1);
   let totalPrice = 0;
-  for (const item of this.products) {
+  for (const item of this.items) {
     const product = await productModel.findById(item.product);
     totalPrice += product.priceAfter * item.quantity;
   }

@@ -67,12 +67,12 @@ const productSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-// // delete product reviews when product removed
-// productSchema.pre("remove", async function (next) {
-//   const product = this;
-//   await Review.deleteMany({ productID: product._id });
-//   next();
-// });
+// delete product reviews when product removed
+productSchema.pre("remove", async function (next) {
+  const product = this;
+  await Review.deleteMany({ productID: product._id });
+  next();
+});
 
 const productModel = mongoose.model("product", productSchema);
 module.exports = productModel;
