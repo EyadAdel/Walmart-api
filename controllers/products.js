@@ -39,8 +39,41 @@ const addProduct = async (req, res, next) => {
 
 const getAllProducts = async (req, res, next) => {
   try {
-    const allProducts = await productModel.find();
-    res.status(200).json(allProducts);
+    const { brand, minPrice, maxPrice, name, sortBy, sortOrder, page, limit } =
+      req.query;
+
+    const filters = {};
+    if (brand) filters.brand = brand;
+    if (minPrice) filters.priceAfter = { $gte: minPrice };
+    if (maxPrice) filters.priceAfter = { $lte: maxPrice };
+    if (name) filters.name = { $regex: name, $options: "i" };
+
+    const sort = {};
+    if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    const pageSize = parseInt(limit) || 10;
+    const currentPage = parseInt(page) || 1;
+    const skip = (currentPage - 1) * pageSize;
+
+    const totalProducts = await productModel.countDocuments(filters);
+    const totalPages = Math.ceil(totalProducts / pageSize);
+
+    const products = await productModel
+      .find(filters)
+      // .populate("sellerID", "businessName")
+      // .populate("departmentID", "name")
+      // .populate("subDepartmentID", "name")
+      // .populate("nestedSubDepartment", "name")
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize);
+
+    res.status(200).json({
+      products,
+      currentPage,
+      totalPages,
+      totalProducts,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -55,15 +88,58 @@ const getProductByID = async (req, res, next) => {
   }
 };
 
+const getProductBySeller = async (req, res, next) => {
+  try {
+    const products = await productModel.find({ sellerID: req.params.id });
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Get products by department
 const getProductByDept = async (req, res, next) => {
   try {
-    const products = await productModel.find({
+    const { brand, minPrice, maxPrice, name, sortBy, sortOrder, page, limit } =
+      req.query;
+
+    const filters = {
       $or: [
         { departmentID: req.params.id },
         { subDepartmentID: req.params.id },
         { nestedSubDepartment: req.params.id },
       ],
+    };
+    if (brand) filters.brand = brand;
+    if (minPrice) filters.priceAfter = { $gte: minPrice };
+    if (maxPrice) filters.priceAfter = { $gte: maxPrice };
+    if (name) filters.name = { $regex: name, $options: "i" };
+
+    const sort = {};
+    if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    const pageSize = parseInt(limit) || 10;
+    const currentPage = parseInt(page) || 1;
+    const skip = (currentPage - 1) * pageSize;
+
+    const totalProducts = await productModel.countDocuments(filters);
+    const totalPages = Math.ceil(totalProducts / pageSize);
+
+    const products = await productModel
+      .find(filters)
+      // .populate("sellerID", "businessName")
+      // .populate("departmentID", "name")
+      // .populate("subDepartmentID", "name")
+      // .populate("nestedSubDepartment", "name")
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize);
+
+    res.status(200).json({
+      products,
+      currentPage,
+      totalPages,
+      totalProducts,
     });
     res.status(200).json(products);
   } catch (err) {
@@ -118,6 +194,7 @@ module.exports = {
   addProduct,
   getAllProducts,
   getProductByID,
+  getProductBySeller,
   getProductByDept,
   updateProdudtByID,
   deleteProductByID,

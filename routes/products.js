@@ -4,6 +4,7 @@ const {
   getAllProducts,
   getProductByID,
   getProductByDept,
+  getProductBySeller,
   updateProdudtByID,
   deleteProductByID,
 } = require("../controllers/products");
@@ -19,6 +20,9 @@ router.get("/:id", getProductByID);
 
 // Get a product by Department
 router.get("/dept/:id", getProductByDept);
+
+// Get a product by seller
+router.get("/seller/:id", getProductBySeller);
 
 //To Delete specific Product
 router.delete("/:id", deleteProductByID);
