@@ -11,23 +11,10 @@ const productSchema = mongoose.Schema(
     priceAfter: { type: Number, required: true },
     brand: { type: String, required: true },
     quantity: Number,
-    // colors: [
-    //   {
-    //     name: String, //red
-    //     image: String, //img of product in specific color
-    //   },
-    // ],
-    // size: [
-    //   {
-    //     val: Number, //32,38,40
-    //     name: String, //Medium, large, xs
-    //   },
-    // ],
     variety: {
       colors: [String],
       sizes: [String],
     },
-    // photos: { type: Array, required: true },
     photos: [
       {
         type: String,
