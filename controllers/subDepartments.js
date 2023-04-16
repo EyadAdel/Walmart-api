@@ -3,7 +3,10 @@ const SubDepartmentModel = require("../models/subDepartments");
 //Get All SubDepartments
 const getAllSubDeps = async (req, res, next) => {
   try {
-    const subDepartments = await SubDepartmentModel.find();
+    const subDepartments = await SubDepartmentModel.find().populate(
+      "parentID",
+      "name"
+    );
     res.status(200).json(subDepartments);
   } catch (err) {
     res.json({ message: err.message });
@@ -13,7 +16,10 @@ const getAllSubDeps = async (req, res, next) => {
 const getSubDepById = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const specificSubDep = await SubDepartmentModel.findById(id);
+    const specificSubDep = await SubDepartmentModel.findById(id).populate(
+      "parentID",
+      "name"
+    );
     res.status(200).json(specificSubDep);
   } catch (err) {
     res.json({ message: err.message });
