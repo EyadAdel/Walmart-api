@@ -25,7 +25,8 @@ var sellerSchema = mongoose.Schema(
       unique: true,
       validate: {
         validator: function (v) {
-          return /^[a-zA-Z]{3,20}(@)(gmail|yahoo|outlook)(.com)$/.test(v);
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+          // return /^[a-zA-Z]{3,20}(@)(gmail|yahoo|outlook)(.com)$/.test(v);
         },
         message: (props) => {
           console.log(props);
@@ -56,6 +57,31 @@ var sellerSchema = mongoose.Schema(
       type: Array,
     },
     badges: [{ type: String }],
+    orders: [
+      {
+        products: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "product",
+          },
+        ],
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+        quantity: {
+          type: Number,
+        },
+        status: {
+          type: String,
+          enum: ["Cancel", "Confirm"],
+        },
+        parentOrder: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "order",
+        },
+      },
+    ],
     tokens: [{ type: Object }],
   },
   { timestamps: true }
@@ -86,12 +112,12 @@ sellerSchema.pre("save", async function (next) {
   }
 });
 
-// delete seller product when account removed
-// sellerSchema.pre("remove", async function (next) {
-//     const user = this;
-//     await Product.deleteMany({ sellerID: user._id });
-//     next();
-//   });
+// delete seller products when account removed
+sellerSchema.pre("remove", async function (next) {
+  const user = this;
+  await Product.deleteMany({ sellerID: user._id });
+  next();
+});
 
 var sellerModel = mongoose.model("seller", sellerSchema);
 module.exports = sellerModel;

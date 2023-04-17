@@ -6,6 +6,8 @@ var {
   updateSellerById,
   deleteSeller,
   loginSeller,
+  getSellerOrders,
+  confirmOrderStatus,
 } = require("../controllers/seller");
 var router = express.Router();
 
@@ -26,5 +28,12 @@ router.patch("/:id", updateSellerById);
 
 // Delete Seller
 router.delete("/:id", deleteSeller);
+
+//-----------------------------------//
+
+//TODO: delete the :id after auth
+router.get("/orders/:id", getSellerOrders);
+
+router.put("/orders/:id", confirmOrderStatus);
 
 module.exports = router;

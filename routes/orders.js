@@ -1,10 +1,9 @@
 var express = require("express");
 const {
   getAllOrders,
-  AddnewOrder,
   createOrder,
   getOrderById,
-  updateOrderById,
+  updateOrderStatus,
   deleteOrder,
 } = require("../controllers/order");
 var router = express.Router();
@@ -19,10 +18,10 @@ router.get("/:id", getOrderById);
 router.post("/", createOrder);
 
 // add new order
-router.post("/", AddnewOrder);
+// router.post("/", AddnewOrder);
 
-// update order
-router.patch("/:id", updateOrderById);
+// update order status
+router.patch("/:id", updateOrderStatus);
 
 // delete order
 router.delete("/:id", deleteOrder);

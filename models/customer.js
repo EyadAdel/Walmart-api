@@ -24,7 +24,8 @@ const customerSchema = mongoose.Schema(
       unique: true,
       validate: {
         validator: function (email) {
-          return /^[a-zA-Z]{4,15}(@)(gmail|yahoo|outlook)(.com)$/.test(email);
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          // return /^[a-zA-Z]{4,15}(@)(gmail|yahoo|outlook)(.com)$/.test(email);
         },
         message: (props) => `${props.value} is not a valid email`,
       },
@@ -41,12 +42,12 @@ const customerSchema = mongoose.Schema(
     password: {
       type: String,
       required: true,
-      validate: {
-        validator: function (v) {
-          return /^(?=.\d)(?=.[a-z])(?=.[A-Z])(?=.[!@#$%^&*]).{8,100}$/.test(v);
-        },
-        message: "Password not match",
-      },
+      // validate: {
+      //   validator: function (v) {
+      //     return /^(?=.\d)(?=.[a-z])(?=.[A-Z])(?=.[!@#$%^&*]).{8,100}$/.test(v);
+      //   },
+      //   message: "Password not match",
+      // },
     },
     // password: {
     //   type: String,

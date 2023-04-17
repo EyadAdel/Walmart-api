@@ -1,5 +1,7 @@
 const sellerModel = require("../models/seller");
 const bcrypt = require("bcrypt");
+const OrderModel = require("../models/orders");
+const productModel = require("../models/products");
 
 //Get All Sellers
 const getAllSellers = async (req, res, next) => {
@@ -16,7 +18,7 @@ const AddnewSeller = async (req, res, next) => {
   const seller = req.body;
   try {
     const addededSeller = await sellerModel.create(seller);
-    const token = await seller.generateAuthToken();
+    const token = await addededSeller.generateAuthToken();
     res.status(201).json({ addededSeller, token });
   } catch (err) {
     res.status(422).json({ message: err.message });
@@ -72,10 +74,79 @@ const updateSellerById = async (req, res) => {
 const deleteSeller = async (req, res) => {
   const id = req.params.id;
   try {
-    let deletedSeller = await sellerModel.findByIdAndDelete(id);
+    await sellerModel.findByIdAndDelete(id);
     res.json("Seller Deleted Successfully");
   } catch (err) {
     res.status(422).json({ message: err.message });
+  }
+};
+
+//-----------------------------------//
+
+const getSellerOrders = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const seller = await sellerModel
+      .findById(id)
+      .populate("orders.products", "name priceAfter");
+
+    // Extract only the orders that have not been confirmed/cancelled
+    const pendingOrders = seller.orders.filter((order) => !order.status);
+
+    res.status(200).json(pendingOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error: " + error });
+  }
+};
+
+const confirmOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status, sellerID } = req.body;
+
+  try {
+    const seller = await sellerModel.findById(sellerID);
+
+    // Find the order and product index
+    const orderIndex = seller.orders.findIndex(
+      (order) => order._id.toString() === id
+    );
+    seller.orders[orderIndex].status = status;
+    await seller.save();
+
+    //  check the rest of product of the order
+    const { parentOrder } = seller.orders[orderIndex];
+    const theOrder = await OrderModel.findById(parentOrder);
+
+    for (const item of theOrder.items) {
+      const product = await productModel.findOne({ _id: item.product });
+      const sellers = await sellerModel.findById(product.sellerID);
+
+      for (const item of sellers.orders) {
+        if (item.parentOrder.equals(parentOrder)) {
+          if (!item.status) {
+            return res.status(200).json({
+              message: "Notification updated and order still pending",
+            });
+          } else if (item.status === "Cancel") {
+            theOrder.status = "Cancelled";
+            await theOrder.save();
+            return res
+              .status(200)
+              .json({ message: "Notification updated and order cancelled" });
+          }
+        }
+      }
+    }
+
+    theOrder.status = "Confirmed";
+    await theOrder.save();
+    res
+      .status(200)
+      .json({ message: "Notification updated and order confirmed" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error: " + error });
   }
 };
 
@@ -86,4 +157,6 @@ module.exports = {
   getSellerById,
   updateSellerById,
   deleteSeller,
+  getSellerOrders,
+  confirmOrderStatus,
 };

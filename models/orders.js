@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const productModel = require("../models/products");
+const sellerModel = require("./seller");
 
 const ordersSchema = mongoose.Schema(
   {
@@ -24,23 +25,11 @@ const ordersSchema = mongoose.Schema(
         },
       },
     ],
-    // shipping_address: {
-    //   // shipping address information
-    //   name: String, // name of the recipient
-    //   address_line_1: String,
-    //   address_line_2: String,
-    //   city: String,
-    //   state: String,
-    //   country: String,
-    //   postal_code: String,
-    // },
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Shipped", "Deliverd", "Cancelled"],
+      enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
-    // status: String, // current status of the order (e.g. "processing", "shipped", "delivered")
-    // total_amount: Number, // total amount for the order
   },
   { timestamps: true }
 );
