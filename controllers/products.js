@@ -151,28 +151,28 @@ const getProductByDept = async (req, res, next) => {
 const updateProdudtByID = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { obj } = req.body;
-    const updatedProduct = await productModel.findByIdAndUpdate(
-      { _id: id },
-      { obj }
-    );
+    const obj = req.body;
+    console.log(id, obj);
+    const updatedProduct = await productModel.findByIdAndUpdate(id, obj, {
+      new: true,
+    });
 
     // adding photos to cloudinary
-    if (req.files) {
-      const files = req.files.photos;
-      const urls = [];
+    // if (req.files) {
+    //   const files = req.files.photos;
+    //   const urls = [];
 
-      for (const file of files) {
-        const result = await cloudinary.uploader.upload(file.tempFilePath, {
-          public_id: `${Date.now()}`,
-          resource_type: "auto",
-          folder: "images",
-        });
-        urls.push(result.url);
-      }
-      updatedProduct.photos = urls;
-      updatedProduct.mainPhoto = updatedProduct.photos[0];
-    }
+    //   for (const file of files) {
+    //     const result = await cloudinary.uploader.upload(file.tempFilePath, {
+    //       public_id: `${Date.now()}`,
+    //       resource_type: "auto",
+    //       folder: "images",
+    //     });
+    //     urls.push(result.url);
+    //   }
+    //   updatedProduct.photos = urls;
+    //   updatedProduct.mainPhoto = updatedProduct.photos[0];
+    // }
 
     res.status(200).json(updatedProduct);
   } catch (err) {
