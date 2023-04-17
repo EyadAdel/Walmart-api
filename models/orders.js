@@ -36,8 +36,8 @@ const ordersSchema = mongoose.Schema(
     // },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
-      default: "pending",
+      enum: ["Pending", "Confirmed", "Shipped", "Deliverd", "Cancelled"],
+      default: "Pending",
     },
     // status: String, // current status of the order (e.g. "processing", "shipped", "delivered")
     // total_amount: Number, // total amount for the order
