@@ -1,21 +1,16 @@
 const orderModel = require("../models/orders");
+const productModel = require("../models/products");
+const sellerModel = require("../models/seller");
 
 //TODO: add populate total and test
 const getAllOrders = async (req, res, next) => {
   try {
-    var newOrder = await orderModel.find();
+    var newOrder = await orderModel
+      .find()
+      .populate("customerID", "firstName email");
     res.status(200).json(newOrder);
   } catch (err) {
     res.json({ message: err.message });
-  }
-};
-const AddnewOrder = async (req, res, next) => {
-  var seller = req.body;
-  try {
-    var addededOrder = await AddnewOrder(seller);
-    res.status(201).json(addededOrder);
-  } catch (err) {
-    res.status(422).json({ message: err.message });
   }
 };
 
@@ -39,9 +34,33 @@ const createOrder = async (req, res) => {
     // if (req.role == "customer") {
     const order = new orderModel({
       // customerID: req.customer._id,
+      // customerID,
+      // items,
       ...req.body,
     });
     await order.save();
+
+    // Update the Seller model for each item in the order
+    for (const item of order.items) {
+      try {
+        const product = await productModel.findOne({ _id: item.product });
+        await sellerModel.findByIdAndUpdate(
+          product.sellerID,
+          {
+            $push: {
+              orders: {
+                products: product._id,
+                parentOrder: order._id,
+                quantity: item.quantity,
+              },
+            },
+          },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    }
     res.status(201).send(order);
     // } else {
     //   res.status(400).send("you are not a customer");
@@ -51,16 +70,24 @@ const createOrder = async (req, res) => {
   }
 };
 
-const updateOrderById = async (req, res) => {
-  var id = req.params.id;
-  var obj = req.body;
+const updateOrderStatus = async (req, res, next) => {
   try {
-    let updatedOrder = await orderModel.findByIdAndUpdate(id, obj, {
-      new: true,
-    });
-    res.json(updatedOrder);
+    const orderId = req.params.orderId;
+    const status = req.body.status;
+
+    // Find the order in the database and update its status
+    const order = await orderModel.findOneAndUpdate(
+      { _id: orderId },
+      { $set: { status: status } },
+      { new: true }
+    );
+
+    // Send a notification to the customer
+    await sendNotification(order.customerId, status);
+
+    res.status(200).json({ message: "Order status updated successfully" });
   } catch (err) {
-    res.status(422).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -74,11 +101,12 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+//-----------------------------------------//
+
 module.exports = {
-  AddnewOrder,
   getAllOrders,
   createOrder,
   getOrderById,
-  updateOrderById,
+  updateOrderStatus,
   deleteOrder,
 };
