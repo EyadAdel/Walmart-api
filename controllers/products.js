@@ -81,7 +81,12 @@ const getAllProducts = async (req, res, next) => {
 
 const getProductByID = async (req, res, next) => {
   try {
-    const allProducts = await productModel.findById(req.params.id);
+    const allProducts = await productModel
+      .findById(req.params.id)
+      .populate("sellerID", "businessName")
+      .populate("departmentID", "name")
+      .populate("subDepartmentID", "name")
+      .populate("nestedSubDepartment", "name");
     res.status(200).json(allProducts);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -91,6 +96,10 @@ const getProductByID = async (req, res, next) => {
 const getProductBySeller = async (req, res, next) => {
   try {
     const products = await productModel.find({ sellerID: req.params.id });
+    // .populate("sellerID", "businessName")
+    // .populate("departmentID", "name")
+    // .populate("subDepartmentID", "name")
+    // .populate("nestedSubDepartment", "name")
     res.status(200).json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });

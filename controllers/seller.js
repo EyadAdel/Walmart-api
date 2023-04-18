@@ -88,10 +88,17 @@ const getSellerOrders = async (req, res) => {
     const { id } = req.params;
     const seller = await sellerModel
       .findById(id)
-      .populate("orders.products", "name priceAfter");
+      .populate("orders.products", "name priceAfter")
+      .populate("orders.parentOrder", "status");
 
-    // Extract only the orders that have not been confirmed/cancelled
-    const pendingOrders = seller.orders.filter((order) => !order.status);
+    // Extract only the orders that have not been confirmed/cancelled and parent order still pending
+    const pendingOrders = [];
+    for (const order of seller.orders) {
+      const theOrder = await OrderModel.findById(order.parentOrder);
+      if (!order.status && theOrder.status === "Pending") {
+        pendingOrders.push(order);
+      }
+    }
 
     res.status(200).json(pendingOrders);
   } catch (error) {
@@ -114,9 +121,31 @@ const confirmOrderStatus = async (req, res) => {
     seller.orders[orderIndex].status = status;
     await seller.save();
 
-    //  check the rest of product of the order
+    // Check if all products in the order have been confirmed or cancelled
     const { parentOrder } = seller.orders[orderIndex];
     const theOrder = await OrderModel.findById(parentOrder);
+
+    if (status === "Cancel") {
+      theOrder.status = "Cancelled";
+      await theOrder.save();
+
+      // Increase the stock quantity of the products in the cancelled order
+      for (const item of theOrder.items) {
+        const product = await productModel.findOne({ _id: item.product });
+        const updatedStockQuantity = product.quantity + item.quantity;
+        await productModel.findByIdAndUpdate(
+          product._id,
+          { quantity: updatedStockQuantity },
+          { new: true }
+        );
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Notification updated and order cancelled" });
+    }
+
+    let allConfirmed = true;
 
     for (const item of theOrder.items) {
       const product = await productModel.findOne({ _id: item.product });
@@ -125,25 +154,28 @@ const confirmOrderStatus = async (req, res) => {
       for (const item of sellers.orders) {
         if (item.parentOrder.equals(parentOrder)) {
           if (!item.status) {
-            return res.status(200).json({
-              message: "Notification updated and order still pending",
-            });
-          } else if (item.status === "Cancel") {
-            theOrder.status = "Cancelled";
-            await theOrder.save();
-            return res
-              .status(200)
-              .json({ message: "Notification updated and order cancelled" });
+            allConfirmed = false;
           }
         }
       }
+
+      if (!allConfirmed) {
+        break;
+      }
     }
 
-    theOrder.status = "Confirmed";
-    await theOrder.save();
-    res
-      .status(200)
-      .json({ message: "Notification updated and order confirmed" });
+    // Update the order status based on the products' status
+    if (allConfirmed) {
+      theOrder.status = "Confirmed";
+      await theOrder.save();
+      res
+        .status(200)
+        .json({ message: "Notification updated and order confirmed" });
+    } else {
+      res
+        .status(200)
+        .json({ message: "Notification updated and order still pending" });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error: " + error });

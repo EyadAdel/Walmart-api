@@ -38,6 +38,22 @@ const createOrder = async (req, res) => {
       // items,
       ...req.body,
     });
+
+    // Check if all products in the order have enough stock
+    let allAvailable = true;
+    for (const item of order.items) {
+      const product = await productModel.findOne({ _id: item.product });
+      if (product.quantity < item.quantity) {
+        allAvailable = false;
+        break;
+      }
+    }
+
+    if (!allAvailable) {
+      res.status(400).json({ error: "Out of stock" });
+      return;
+    }
+
     await order.save();
 
     // Update the Seller model for each item in the order
@@ -56,6 +72,12 @@ const createOrder = async (req, res) => {
             },
           },
           { upsert: true }
+        );
+        const updatedStockQuantity = product.quantity - item.quantity;
+        await productModel.findByIdAndUpdate(
+          product._id,
+          { quantity: updatedStockQuantity },
+          { new: true }
         );
       } catch (err) {
         console.error(err);
