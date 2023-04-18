@@ -53,7 +53,10 @@ const AddnewCustomer = async (req, res, next) => {
 
 const getAllCustomers = async (req, res, next) => {
   try {
-    const customersEmail = await customerModel.find({});
+    const customersEmail = await customerModel
+      .find({})
+      .populate("lists.favorites", "name")
+      .populate("cart.product", "name");
     res.status(200).json(customersEmail);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -63,7 +66,10 @@ const getAllCustomers = async (req, res, next) => {
 const getCustomerByEmail = async (req, res, next) => {
   try {
     const { email } = req.params;
-    const customersEmail = await customerModel.find({ email });
+    const customersEmail = await customerModel
+      .find({ email })
+      .populate("lists.favorites", "name")
+      .populate("cart.product", "name");
     res.status(200).json(customersEmail);
   } catch (err) {
     res.status(500).json({ message: err.message });

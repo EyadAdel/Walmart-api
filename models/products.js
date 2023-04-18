@@ -10,7 +10,10 @@ const productSchema = mongoose.Schema(
     priceBefore: Number,
     priceAfter: { type: Number, required: true },
     brand: { type: String, required: true },
-    quantity: Number,
+    quantity: {
+      type: Number,
+      required: true,
+    },
     variety: {
       colors: [String],
       sizes: [String],

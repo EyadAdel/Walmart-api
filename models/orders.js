@@ -44,5 +44,5 @@ ordersSchema.virtual("totalPrice").get(async function () {
   return totalPrice;
 });
 
-const OrderModel = mongoose.model("orders", ordersSchema);
+const OrderModel = mongoose.model("order", ordersSchema);
 module.exports = OrderModel;
