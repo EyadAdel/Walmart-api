@@ -3,8 +3,14 @@ const mongoose = require("mongoose");
 const departmentSchema = mongoose.Schema(
   {
     name: {
-      type: String,
-      required: true,
+      ar: {
+        type: String,
+        required: true,
+      },
+      en: {
+        type: String,
+        required: true,
+      },
     },
   },
   { timestamps: true }
