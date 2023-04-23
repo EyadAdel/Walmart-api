@@ -3,20 +3,40 @@ const mongoose = require("mongoose");
 const productSchema = mongoose.Schema(
   {
     name: {
-      type: String,
-      required: true,
-      // unique:true,
+      ar: {
+        type: String,
+        required: true,
+      },
+      en: {
+        type: String,
+        required: true,
+      },
     },
     priceBefore: Number,
     priceAfter: { type: Number, required: true },
-    brand: { type: String, required: true },
+    brand: {
+      ar: {
+        type: String,
+        required: true,
+      },
+      en: {
+        type: String,
+        required: true,
+      },
+    },
     quantity: {
       type: Number,
       required: true,
     },
     variety: {
-      colors: [String],
-      sizes: [String],
+      colors: {
+        ar: [String],
+        en: [String],
+      },
+      sizes: {
+        ar: [String],
+        en: [String],
+      },
     },
     photos: [
       {
@@ -24,11 +44,24 @@ const productSchema = mongoose.Schema(
       },
     ],
     mainPhoto: { type: String },
-    badges: Array,
-    tags: Array,
-    productDetails: { type: String, required: true },
-    specifications: [{ type: Object }],
-    warranty: String,
+    badges: {
+      ar: [String],
+      en: [String],
+    },
+    productDetails: {
+      ar: { type: String },
+      en: { type: String },
+    },
+    specifications: [
+      {
+        ar: { type: String },
+        en: { type: String },
+      },
+    ],
+    warranty: {
+      ar: { type: String },
+      en: { type: String },
+    },
     isActive: {
       type: Boolean,
       default: true,

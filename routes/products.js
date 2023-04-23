@@ -2,9 +2,12 @@ const express = require("express");
 const {
   addProduct,
   getAllProducts,
+  getAllActiveProducts,
+  changeProductActivity,
   getProductByID,
   getProductByDept,
   getProductBySeller,
+  getActiveProductBySeller,
   updateProdudtByID,
   deleteProductByID,
 } = require("../controllers/products");
@@ -13,7 +16,13 @@ const cloudinary = require("cloudinary");
 const fileUpload = require("express-fileupload");
 
 //Get All Products
-router.get("/", getAllProducts);
+router.get("/all", getAllProducts);
+
+//Get All Active Products
+router.get("/", getAllActiveProducts);
+
+//change product activity
+router.put("/activity/:id", changeProductActivity);
 
 //Get Products by id
 router.get("/:id", getProductByID);
@@ -21,8 +30,11 @@ router.get("/:id", getProductByID);
 // Get a product by Department
 router.get("/dept/:id", getProductByDept);
 
-// Get a product by seller
-router.get("/seller/:id", getProductBySeller);
+// Get all product by seller
+router.get("/seller/all/:id", getProductBySeller);
+
+// Get the products by seller
+router.get("/seller/:id", getActiveProductBySeller);
 
 //To Delete specific Product
 router.delete("/:id", deleteProductByID);

@@ -74,11 +74,19 @@ const createOrder = async (req, res) => {
           { upsert: true }
         );
         const updatedStockQuantity = product.quantity - item.quantity;
-        await productModel.findByIdAndUpdate(
-          product._id,
-          { quantity: updatedStockQuantity },
-          { new: true }
-        );
+        if (updatedStockQuantity === 0) {
+          await productModel.findByIdAndUpdate(
+            product._id,
+            { quantity: updatedStockQuantity, isActive: false },
+            { new: true }
+          );
+        } else {
+          await productModel.findByIdAndUpdate(
+            product._id,
+            { quantity: updatedStockQuantity },
+            { new: true }
+          );
+        }
       } catch (err) {
         console.error(err);
       }

@@ -1,17 +1,38 @@
 const adminModel = require("../models/admin");
+const bcrypt = require("bcrypt");
 
 const getAllAdmins = async (req, res, next) => {
   try {
-    var newAdmin = await adminModel.find();
+    const newAdmin = await adminModel.find();
     res.status(200).json(newAdmin);
   } catch (err) {
     res.json({ message: err.message });
   }
 };
-const AddnewAdmin = async (req, res, next) => {
-  var admin = req.body;
+
+const loginAdmin = async (req, res, next) => {
+  const { email, password } = req.body;
   try {
-    var savedAdmin = await adminModel.create(admin);
+    const admin = await adminModel.findOne({ email });
+    if (!admin) {
+      res.status(404).send("invalid password or email");
+      return;
+    }
+    const valid = bcrypt.compareSync(password, admin.password);
+    if (!valid) {
+      res.status(404).send("invalid password or email");
+      return;
+    }
+    const token = await admin.generateAuthToken();
+    res.send({ admin, token });
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+};
+const AddnewAdmin = async (req, res, next) => {
+  const admin = req.body;
+  try {
+    const savedAdmin = await adminModel.create(admin);
     const token = await savedAdmin.generateAuthToken();
     res.status(201).json({ savedAdmin, token });
   } catch (err) {
@@ -20,9 +41,9 @@ const AddnewAdmin = async (req, res, next) => {
 };
 
 const getAdminById = async (req, res, next) => {
-  var { id } = req.params;
+  const { id } = req.params;
   try {
-    var specificAdmin = await adminModel.findById(id);
+    const specificAdmin = await adminModel.findById(id);
     res.status(200).json(specificAdmin);
   } catch (err) {
     res.json({ message: err.message });
@@ -30,8 +51,8 @@ const getAdminById = async (req, res, next) => {
 };
 
 const updateAdminById = async (req, res) => {
-  var id = req.params.id;
-  var obj = req.body;
+  const id = req.params.id;
+  const obj = req.body;
   try {
     let updatedAdmin = await adminModel.findByIdAndUpdate(id, obj, {
       new: true,
@@ -43,7 +64,7 @@ const updateAdminById = async (req, res) => {
 };
 
 const deleteAdminById = async (req, res) => {
-  var id = req.params.id;
+  const id = req.params.id;
   try {
     let deletedAdmin = await adminModel.findByIdAndDelete(id);
     res.json("Admin deleted successfully");
@@ -54,6 +75,7 @@ const deleteAdminById = async (req, res) => {
 
 module.exports = {
   AddnewAdmin,
+  loginAdmin,
   getAllAdmins,
   getAdminById,
   updateAdminById,
