@@ -24,7 +24,7 @@ const checkPass = async (req, res) => {
     const customer = await customerModel.findOne({ email });
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
-      res.status(401).send("Invalid password");
+      res.send(isMatch);
       return;
     }
     const token = await customer.generateAuthToken();
