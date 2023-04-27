@@ -148,10 +148,10 @@ const getProductByID = async (req, res, next) => {
   try {
     const allProducts = await productModel
       .findById(req.params.id)
-      .populate("sellerID", "businessName")
-      .populate("departmentID", "name")
-      .populate("subDepartmentID", "name")
-      .populate("nestedSubDepartment", "name");
+      // .populate("sellerID", "businessName")
+      // .populate("departmentID", "name")
+      // .populate("subDepartmentID", "name")
+      // .populate("nestedSubDepartment", "name");
     res.status(200).json(allProducts);
   } catch (err) {
     res.status(500).json({ message: err.message });
