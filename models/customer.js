@@ -106,7 +106,6 @@ customerSchema.methods.generateAuthToken = async function () {
   });
   customer.tokens = customer.tokens.concat({ token });
   await customer.save();
-  console.log(4);
   return token;
 };
 

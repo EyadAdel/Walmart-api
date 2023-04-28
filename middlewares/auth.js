@@ -1,23 +1,40 @@
-const jwt= require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const Admin = require("../models/admin");
+const Customer = require("../models/customer");
+const Seller = require("../models/seller");
 
-function auth(req,res,next){
-    const{authorization}= req.headers;
-    if(authorization){
-        jwt.verify(authorization,process.env.SECRET,function(err,decoded){
-            if(err){
-                res.status(401).json({message:err.message})
-            }
-            if(decoded){ //return payload => decode 
-                req.email= decoded.email
-                req.userId= decoded.userId
-                next()
-            }else{
-                res.status(401).end("unauthorized")
-            }
-        })
-    }else{
-        res.status(401).end('You have to Login first')
+const auth = async (req, res, next) => {
+  try {
+    const token = req.header("Authorization").replace("Bearer ", "");
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const [userIsAdmin, userIsSeller, userIsCustomer] = await Promise.all([
+      Admin.findOne({ _id: decoded._id, "tokens.token": token }),
+      Seller.findOne({ _id: decoded._id, "tokens.token": token }),
+      Customer.findOne({ _id: decoded._id, "tokens.token": token }),
+    ]);
+
+    switch (true) {
+      case Boolean(userIsAdmin):
+        req.admin = userIsAdmin;
+        req.role = "admin";
+        break;
+      case Boolean(userIsSeller):
+        req.seller = userIsSeller;
+        req.role = "seller";
+        break;
+      case Boolean(userIsCustomer):
+        req.customer = userIsCustomer;
+        req.role = "customer";
+        break;
+      default:
+        throw new Error();
     }
-}
 
-module.exports= {auth};
+    req.token = token;
+    next();
+  } catch (err) {
+    res.status(401).send({ error: "Please Login first" });
+  }
+};
+
+module.exports = auth;

@@ -6,8 +6,12 @@ const productModel = require("../models/products");
 //Get All Sellers
 const getAllSellers = async (req, res, next) => {
   try {
-    const allSellers = await sellerModel.find();
-    res.status(200).json(allSellers);
+    if (req.role === "admin") {
+      const allSellers = await sellerModel.find();
+      res.status(200).json(allSellers);
+    } else {
+      res.status(500).json("you not admin");
+    }
   } catch (err) {
     res.json({ message: err.message });
   }
@@ -15,8 +19,8 @@ const getAllSellers = async (req, res, next) => {
 
 // Add new seller
 const AddnewSeller = async (req, res, next) => {
-  const seller = req.body;
   try {
+    const seller = req.body;
     const addededSeller = await sellerModel.create(seller);
     const token = await addededSeller.generateAuthToken();
     res.status(201).json({ addededSeller, token });
@@ -47,8 +51,8 @@ const loginSeller = async (req, res) => {
 
 // Get seller by id
 const getSellerById = async (req, res, next) => {
-  const { id } = req.params;
   try {
+    const { id } = req.params;
     const specificSeller = await sellerModel.findById(id);
     res.status(200).json(specificSeller);
   } catch (err) {
@@ -58,13 +62,17 @@ const getSellerById = async (req, res, next) => {
 
 //Update Seller
 const updateSellerById = async (req, res) => {
-  const id = req.params.id;
-  const obj = req.body;
   try {
-    const updatedSeller = await sellerModel.findByIdAndUpdate(id, obj, {
-      new: true,
-    });
-    res.json(updatedSeller);
+    if (req.role === "seller" && req.seller._id.equals(req.params.id)) {
+      const id = req.params.id;
+      const obj = req.body;
+      const updatedSeller = await sellerModel.findByIdAndUpdate(id, obj, {
+        new: true,
+      });
+      res.json(updatedSeller);
+    } else {
+      res.status(500).json("you cannot edit another account");
+    }
   } catch (err) {
     res.status(422).json({ message: err.message });
   }
@@ -72,10 +80,20 @@ const updateSellerById = async (req, res) => {
 
 //Delete Seller
 const deleteSeller = async (req, res) => {
-  const id = req.params.id;
   try {
-    await sellerModel.findByIdAndDelete(id);
-    res.json("Seller Deleted Successfully");
+    if (
+      (req.role === "seller" && req.seller._id.equals(req.params.id)) ||
+      req.role === "admin"
+    ) {
+      const id = req.params.id;
+      if (id.equals(process.env.WALMART_SELLER_ID)) {
+        return res.json("no one can delete walmart seller account!!");
+      }
+      await sellerModel.findByIdAndDelete(id);
+      res.json("Seller Deleted Successfully");
+    } else {
+      res.status(500).json("you cannot edit another account");
+    }
   } catch (err) {
     res.status(422).json({ message: err.message });
   }
@@ -85,22 +103,26 @@ const deleteSeller = async (req, res) => {
 
 const getSellerOrders = async (req, res) => {
   try {
-    const { id } = req.params;
-    const seller = await sellerModel
-      .findById(id)
-      .populate("orders.products", "name priceAfter")
-      .populate("orders.parentOrder", "status");
+    if (req.role === "seller") {
+      const id = req.seller._id;
+      const seller = await sellerModel
+        .findById(id)
+        .populate("orders.products", "name priceAfter")
+        .populate("orders.parentOrder", "status");
 
-    // Extract only the orders that have not been confirmed/cancelled and parent order still pending
-    const pendingOrders = [];
-    for (const order of seller.orders) {
-      const theOrder = await OrderModel.findById(order.parentOrder);
-      if (!order.status && theOrder.status === "Pending") {
-        pendingOrders.push(order);
+      // Extract only the orders that have not been confirmed/cancelled and parent order still pending
+      const pendingOrders = [];
+      for (const order of seller.orders) {
+        const theOrder = await OrderModel.findById(order.parentOrder);
+        if (!order.status && theOrder.status === "Pending") {
+          pendingOrders.push(order);
+        }
       }
-    }
 
-    res.status(200).json(pendingOrders);
+      res.status(200).json(pendingOrders);
+    } else {
+      res.status(500).json("you cannot be here");
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error: " + error });
@@ -108,73 +130,77 @@ const getSellerOrders = async (req, res) => {
 };
 
 const confirmOrderStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status, sellerID } = req.body;
-
   try {
-    const seller = await sellerModel.findById(sellerID);
+    if (req.role === "seller") {
+      const id = req.seller._id;
+      const { status, sellerID } = req.body;
 
-    // Find the order and product index
-    const orderIndex = seller.orders.findIndex(
-      (order) => order._id.toString() === id
-    );
-    seller.orders[orderIndex].status = status;
-    await seller.save();
+      const seller = await sellerModel.findById(sellerID);
 
-    // Check if all products in the order have been confirmed or cancelled
-    const { parentOrder } = seller.orders[orderIndex];
-    const theOrder = await OrderModel.findById(parentOrder);
+      // Find the order and product index
+      const orderIndex = seller.orders.findIndex(
+        (order) => order._id.toString() === id
+      );
+      seller.orders[orderIndex].status = status;
+      await seller.save();
 
-    if (status === "Cancel") {
-      theOrder.status = "Cancelled";
-      await theOrder.save();
+      // Check if all products in the order have been confirmed or cancelled
+      const { parentOrder } = seller.orders[orderIndex];
+      const theOrder = await OrderModel.findById(parentOrder);
 
-      // Increase the stock quantity of the products in the cancelled order
-      for (const item of theOrder.items) {
-        const product = await productModel.findOne({ _id: item.product });
-        const updatedStockQuantity = product.quantity + item.quantity;
-        await productModel.findByIdAndUpdate(
-          product._id,
-          { quantity: updatedStockQuantity },
-          { new: true }
-        );
+      if (status === "Cancel") {
+        theOrder.status = "Cancelled";
+        await theOrder.save();
+
+        // Increase the stock quantity of the products in the cancelled order
+        for (const item of theOrder.items) {
+          const product = await productModel.findOne({ _id: item.product });
+          const updatedStockQuantity = product.quantity + item.quantity;
+          await productModel.findByIdAndUpdate(
+            product._id,
+            { quantity: updatedStockQuantity },
+            { new: true }
+          );
+        }
+
+        return res
+          .status(200)
+          .json({ message: "Notification updated and order cancelled" });
       }
 
-      return res
-        .status(200)
-        .json({ message: "Notification updated and order cancelled" });
-    }
+      let allConfirmed = true;
 
-    let allConfirmed = true;
+      for (const item of theOrder.items) {
+        const product = await productModel.findOne({ _id: item.product });
+        const sellers = await sellerModel.findById(product.sellerID);
 
-    for (const item of theOrder.items) {
-      const product = await productModel.findOne({ _id: item.product });
-      const sellers = await sellerModel.findById(product.sellerID);
-
-      for (const item of sellers.orders) {
-        if (item.parentOrder.equals(parentOrder)) {
-          if (!item.status) {
-            allConfirmed = false;
+        for (const item of sellers.orders) {
+          if (item.parentOrder.equals(parentOrder)) {
+            if (!item.status) {
+              allConfirmed = false;
+            }
           }
+        }
+
+        if (!allConfirmed) {
+          break;
         }
       }
 
-      if (!allConfirmed) {
-        break;
+      // Update the order status based on the products' status
+      if (allConfirmed) {
+        theOrder.status = "Confirmed";
+        await theOrder.save();
+        res
+          .status(200)
+          .json({ message: "Notification updated and order confirmed" });
+      } else {
+        res
+          .status(200)
+          .json({ message: "Notification updated and order still pending" });
       }
-    }
-
-    // Update the order status based on the products' status
-    if (allConfirmed) {
-      theOrder.status = "Confirmed";
-      await theOrder.save();
-      res
-        .status(200)
-        .json({ message: "Notification updated and order confirmed" });
     } else {
-      res
-        .status(200)
-        .json({ message: "Notification updated and order still pending" });
+      res.status(500).json("you cannot be here");
     }
   } catch (error) {
     console.error(error);
