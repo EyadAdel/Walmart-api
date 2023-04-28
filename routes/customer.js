@@ -9,6 +9,7 @@ const {
   deleteCustomerById,
   customerLogin,
 } = require("../controllers/customer");
+const auth = require("../middlewares/auth");
 
 //Customer login
 router.post("/login", customerLogin);
@@ -23,15 +24,15 @@ router.post("/signup", AddnewCustomer);
 // router.post("/address",addAddress);
 
 //Get all customers
-router.get("/", getAllCustomers);
+router.get("/", auth, getAllCustomers);
 
 //Get sepcific customer by email
 router.get("/:email", getCustomerByEmail);
 
 //Update in any field of specific customer by Id
-router.patch("/:id", updateCustomerById);
+router.patch("/:id", auth, updateCustomerById);
 
 //Delete specific customer by id
-router.delete("/:id", deleteCustomerById);
+router.delete("/:id", auth, deleteCustomerById);
 
 module.exports = router;

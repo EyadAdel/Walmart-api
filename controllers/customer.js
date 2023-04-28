@@ -53,11 +53,15 @@ const AddnewCustomer = async (req, res, next) => {
 
 const getAllCustomers = async (req, res, next) => {
   try {
-    const customersEmail = await customerModel
-      .find({})
-      .populate("lists.favorites", "name")
-      .populate("cart.product", "name");
-    res.status(200).json(customersEmail);
+    if (req.role === "admin") {
+      const customersEmail = await customerModel
+        .find({})
+        .populate("lists.favorites", "name")
+        .populate("cart.product", "name");
+      res.status(200).json(customersEmail);
+    } else {
+      res.status(500).json({ message: "Only admin can do that" });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -78,14 +82,18 @@ const getCustomerByEmail = async (req, res, next) => {
 
 const updateCustomerById = async (req, res, next) => {
   try {
-    const obj = req.body;
     const { id } = req.params;
-    const updateFirstNameOfCustomer = await customerModel.findByIdAndUpdate(
-      id,
-      obj,
-      { new: true }
-    );
-    res.status(200).json(updateFirstNameOfCustomer);
+    const obj = req.body;
+    if (req.role === "customer" && id.equals(req.customer._id)) {
+      const updateFirstNameOfCustomer = await customerModel.findByIdAndUpdate(
+        id,
+        obj,
+        { new: true }
+      );
+      res.status(200).json(updateFirstNameOfCustomer);
+    } else {
+      res.status(500).json({ message: `It's not your account` });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -94,8 +102,15 @@ const updateCustomerById = async (req, res, next) => {
 const deleteCustomerById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deletedCustomer = await customerModel.deleteOne({ _id: id });
-    res.status(200).json("Customer deleted successfully");
+    if (
+      (req.role === "customer" && id.equals(req.customer._id)) ||
+      req.role === "admin"
+    ) {
+      await customerModel.deleteOne({ _id: id });
+      res.status(200).json("Customer deleted successfully");
+    } else {
+      res.status(500).json({ message: `It's not your account` });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

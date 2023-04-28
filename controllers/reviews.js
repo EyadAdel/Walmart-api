@@ -2,9 +2,16 @@ const reviewModel = require("../models/reviews");
 
 const createdReview = async (req, res, next) => {
   try {
-    const reviewToBeAdded = req.body;
-    const createdReview = await reviewModel.create(reviewToBeAdded);
-    res.status(200).json(createdReview);
+    if (req.role === "customer") {
+      const reviewToBeAdded = {
+        authorID: req.customer._id,
+        ...req.body,
+      };
+      const createdReview = await reviewModel.create(reviewToBeAdded);
+      res.status(200).json(createdReview);
+    } else {
+      res.status(500).json("only customers can add reviews");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -44,15 +51,20 @@ const getAllSellerReviews = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
-
+//TODO: complete this auth
 const updatedReview = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const obj = req.body;
-    const updatedReview = await reviewModel.findByIdAndUpdate(id, obj, {
-      new: true,
-    });
-    res.status(200).json(updatedReview);
+    const review = await reviewModel.findById(id);
+    if (req.role === "customer" && review.authorID.equals(req.customer._id)) {
+      const obj = req.body;
+      const updatedReview = await reviewModel.findByIdAndUpdate(id, obj, {
+        new: true,
+      });
+      res.status(200).json(updatedReview);
+    } else {
+      res.status(500).json("only customers can add reviews");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -61,8 +73,13 @@ const updatedReview = async (req, res, next) => {
 const deletedReview = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deletedReview = await reviewModel.deleteOne({ _id: id });
-    res.status(200).json(deletedReview);
+    const review = await reviewModel.findById(id);
+    if (req.role === "customer" && review.authorID.equals(req.customer._id)) {
+      const deletedReview = await reviewModel.deleteOne({ _id: id });
+      res.status(200).json("Review Deleted Successfully");
+    } else {
+      res.status(500).json("only customers can add reviews");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
