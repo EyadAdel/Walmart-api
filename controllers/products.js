@@ -1,5 +1,6 @@
 const productModel = require("../models/products");
 const cloudinary = require("cloudinary");
+const { filterProducts } = require("../utils/filterProducts");
 
 //TODO: admin confirmation first
 const addProduct = async (req, res, next) => {
@@ -42,54 +43,8 @@ const addProduct = async (req, res, next) => {
 const getAllProducts = async (req, res, next) => {
   try {
     if (req.role === "admin") {
-      const {
-        brand,
-        minPrice,
-        maxPrice,
-        name,
-        sortBy,
-        sortOrder,
-        page,
-        limit,
-      } = req.query;
-      const filters = {};
-      if (brand) {
-        filters["$or"] = [{ "brand.en": brand }, { "brand.ar": brand }];
-      }
-      if (minPrice) filters.priceAfter = { $gte: minPrice };
-      if (maxPrice) filters.priceAfter = { $lte: maxPrice };
-      if (name) {
-        filters["$or"] = [
-          { "name.en": { $regex: name, $options: "i" } },
-          { "name.ar": { $regex: name, $options: "i" } },
-        ];
-      }
-
-      const sort = {};
-      if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
-
-      const pageSize = parseInt(limit) || 100;
-      const currentPage = parseInt(page) || 1;
-      const skip = (currentPage - 1) * pageSize;
-      const totalProducts = await productModel.countDocuments(filters);
-      const totalPages = Math.ceil(totalProducts / pageSize);
-
-      const products = await productModel
-        .find(filters)
-        // .populate("sellerID", "businessName")
-        // .populate("departmentID", "name")
-        // .populate("subDepartmentID", "name")
-        // .populate("nestedSubDepartment", "name")
-        .sort(sort)
-        .skip(skip)
-        .limit(pageSize);
-
-      res.status(200).json({
-        products,
-        currentPage,
-        totalPages,
-        totalProducts,
-      });
+      const filteredProducts = await filterProducts(req.query, 100);
+      res.status(200).json(filteredProducts);
     } else {
       res.status(400).json("only admin can access");
     }
@@ -101,43 +56,8 @@ const getAllProducts = async (req, res, next) => {
 //for users website
 const getAllActiveProducts = async (req, res, next) => {
   try {
-    const { brand, minPrice, maxPrice, name, sortBy, sortOrder, page, limit } =
-      req.query;
-
-    const filters = {
-      isActive: true,
-    };
-    if (brand) filters.brand = brand;
-    if (minPrice) filters.priceAfter = { $gte: minPrice };
-    if (maxPrice) filters.priceAfter = { $lte: maxPrice };
-    if (name) filters.name = { $regex: name, $options: "i" };
-
-    const sort = {};
-    if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
-
-    const pageSize = parseInt(limit) || 10;
-    const currentPage = parseInt(page) || 1;
-    const skip = (currentPage - 1) * pageSize;
-
-    const totalProducts = await productModel.countDocuments(filters);
-    const totalPages = Math.ceil(totalProducts / pageSize);
-
-    const products = await productModel
-      .find(filters)
-      // .populate("sellerID", "businessName")
-      // .populate("departmentID", "name")
-      // .populate("subDepartmentID", "name")
-      // .populate("nestedSubDepartment", "name")
-      .sort(sort)
-      .skip(skip)
-      .limit(pageSize);
-
-    res.status(200).json({
-      products,
-      currentPage,
-      totalPages,
-      totalProducts,
-    });
+    const filteredProducts = await filterProducts(req.query, 20);
+    res.status(200).json(filteredProducts);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
