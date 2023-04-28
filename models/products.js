@@ -73,12 +73,12 @@ const productSchema = mongoose.Schema(
     },
     subDepartmentID: {
       type: mongoose.SchemaTypes.ObjectId,
-      ref: "SubDepartment",
+      ref: "subDepartment",
       required: true,
     },
     nestedSubDepartment: {
       type: mongoose.SchemaTypes.ObjectId,
-      ref: "SubDepartment",
+      ref: "subSubDepartment",
       required: true,
     },
     sellerID: {

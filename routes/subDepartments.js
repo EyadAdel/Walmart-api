@@ -1,21 +1,28 @@
-const express = require('express')
-const { getAllSubDeps,AddnewSubDep,getSubDepById,updateSubDepById,deleteSubDepartment } = require('../controllers/subDepartments');
-const router = express.Router()
+const express = require("express");
+const {
+  getAllSubDeps,
+  AddnewSubDep,
+  getSubDepById,
+  updateSubDepById,
+  deleteSubDepartment,
+} = require("../controllers/subDepartments");
+const auth = require("../middlewares/auth");
+
+const router = express.Router();
 
 //Get All SubDepartments
 router.get("/", getAllSubDeps);
 
 //Get subDepartment by id
-router.get("/:id",getSubDepById)
+router.get("/:id", getSubDepById);
 
 //Add new SubDepartment
-router.post("/", AddnewSubDep);
+router.post("/", auth, AddnewSubDep);
 
 //Update subDepartment
-router.patch("/:id",updateSubDepById)
+router.patch("/:id", auth, updateSubDepById);
 
 //Delete subDepartment
-router.delete("/:id", deleteSubDepartment);
+router.delete("/:id", auth, deleteSubDepartment);
 
-module.exports = router
-
+module.exports = router;

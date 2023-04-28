@@ -6,6 +6,8 @@ const {
   updateSubDepById,
   deleteSubDepartment,
 } = require("../controllers/subSubDepartment");
+const auth = require("../middlewares/auth");
+
 const router = express.Router();
 
 //Get All SubSubDepartments
@@ -15,12 +17,12 @@ router.get("/", getAllSubDeps);
 router.get("/:id", getSubDepById);
 
 //Add new SubSubDepartment
-router.post("/", AddnewSubDep);
+router.post("/", auth, AddnewSubDep);
 
 //Update subSubDepartment
-router.patch("/:id", updateSubDepById);
+router.patch("/:id", auth, updateSubDepById);
 
 //Delete subSubDepartment
-router.delete("/:id", deleteSubDepartment);
+router.delete("/:id", auth, deleteSubDepartment);
 
 module.exports = router;
