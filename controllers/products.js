@@ -1,36 +1,37 @@
 const productModel = require("../models/products");
 const cloudinary = require("cloudinary");
 
+//TODO: admin confirmation first
 const addProduct = async (req, res, next) => {
   try {
-    // if (req.role === "seller" || req.role === "admin") {
-    const product = new productModel({
-      ...req.body,
-      // sellerID: req.seller?._id || req.admin._id,
-    });
+    if (req.role === "seller" || req.role === "admin") {
+      const product = new productModel({
+        ...req.body,
+        sellerID: req.seller?._id || process.env.WALMART_SELLER_ID,
+      });
 
-    // adding photos to cloudinary
-    if (req.files) {
-      const files = req.files.photos;
-      const urls = [];
+      // adding photos to cloudinary
+      if (req.files) {
+        const files = req.files.photos;
+        const urls = [];
 
-      for (const file of files) {
-        const result = await cloudinary.uploader.upload(file.tempFilePath, {
-          public_id: `${Date.now()}`,
-          resource_type: "auto",
-          folder: "images",
-        });
-        urls.push(result.url);
+        for (const file of files) {
+          const result = await cloudinary.uploader.upload(file.tempFilePath, {
+            public_id: `${Date.now()}`,
+            resource_type: "auto",
+            folder: "images",
+          });
+          urls.push(result.url);
+        }
+        product.photos = urls;
+        product.mainPhoto = product.photos[0];
       }
-      product.photos = urls;
-      product.mainPhoto = product.photos[0];
-    }
 
-    const result = await product.save();
-    res.status(201).json(result);
-    // } else {
-    //   res.status(500).json({ error: "create seller account" });
-    // }
+      const result = await product.save();
+      res.status(201).json(result);
+    } else {
+      res.status(500).json({ error: "create seller account" });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -40,41 +41,58 @@ const addProduct = async (req, res, next) => {
 //for admin dashboard
 const getAllProducts = async (req, res, next) => {
   try {
-    const { brand, minPrice, maxPrice, name, sortBy, sortOrder, page, limit } =
-      req.query;
+    if (req.role === "admin") {
+      const {
+        brand,
+        minPrice,
+        maxPrice,
+        name,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      } = req.query;
+      const filters = {};
+      if (brand) {
+        filters["$or"] = [{ "brand.en": brand }, { "brand.ar": brand }];
+      }
+      if (minPrice) filters.priceAfter = { $gte: minPrice };
+      if (maxPrice) filters.priceAfter = { $lte: maxPrice };
+      if (name) {
+        filters["$or"] = [
+          { "name.en": { $regex: name, $options: "i" } },
+          { "name.ar": { $regex: name, $options: "i" } },
+        ];
+      }
 
-    const filters = {};
-    if (brand) filters.brand = brand;
-    if (minPrice) filters.priceAfter = { $gte: minPrice };
-    if (maxPrice) filters.priceAfter = { $lte: maxPrice };
-    if (name) filters.name = { $regex: name, $options: "i" };
+      const sort = {};
+      if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
-    const sort = {};
-    if (sortBy) sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+      const pageSize = parseInt(limit) || 100;
+      const currentPage = parseInt(page) || 1;
+      const skip = (currentPage - 1) * pageSize;
+      const totalProducts = await productModel.countDocuments(filters);
+      const totalPages = Math.ceil(totalProducts / pageSize);
 
-    const pageSize = parseInt(limit) || 10;
-    const currentPage = parseInt(page) || 1;
-    const skip = (currentPage - 1) * pageSize;
+      const products = await productModel
+        .find(filters)
+        // .populate("sellerID", "businessName")
+        // .populate("departmentID", "name")
+        // .populate("subDepartmentID", "name")
+        // .populate("nestedSubDepartment", "name")
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize);
 
-    const totalProducts = await productModel.countDocuments(filters);
-    const totalPages = Math.ceil(totalProducts / pageSize);
-
-    const products = await productModel
-      .find(filters)
-      // .populate("sellerID", "businessName")
-      // .populate("departmentID", "name")
-      // .populate("subDepartmentID", "name")
-      // .populate("nestedSubDepartment", "name")
-      .sort(sort)
-      .skip(skip)
-      .limit(pageSize);
-
-    res.status(200).json({
-      products,
-      currentPage,
-      totalPages,
-      totalProducts,
-    });
+      res.status(200).json({
+        products,
+        currentPage,
+        totalPages,
+        totalProducts,
+      });
+    } else {
+      res.status(400).json("only admin can access");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -128,52 +146,104 @@ const getAllActiveProducts = async (req, res, next) => {
 //for seller and admin
 const changeProductActivity = async (req, res, next) => {
   try {
-    const productId = req.params.id;
-    const { isActive } = req.body;
-
-    const product = await productModel.findByIdAndUpdate(
-      productId,
-      { isActive },
-      { new: true }
-    );
-
-    res.status(200).json(product);
+    if (req.role === "seller" || req.role === "admin") {
+      const productId = req.params.id;
+      const { isActive } = req.body;
+      const theproduct = await productModel.findById(productId);
+      if (
+        req.role === "admin" &&
+        theproduct.sellerID.equals(process.env.WALMART_SELLER_ID)
+      ) {
+        const product = await productModel.findByIdAndUpdate(
+          productId,
+          { isActive },
+          { new: true }
+        );
+        res.status(200).json(product);
+      } else if (req.seller._id.equals(theproduct.sellerID)) {
+        const product = await productModel.findByIdAndUpdate(
+          productId,
+          { isActive },
+          { new: true }
+        );
+        res.status(200).json(product);
+      } else {
+        res.json("you are not the product owner");
+      }
+    } else {
+      res.status(500).json({ error: "create seller account" });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+// const changeProductActivity = async (req, res, next) => {
+//   try {
+//     if (req.role === "seller" || req.role === "admin") {
+//       const productId = req.params.id;
+//       const { isActive } = req.body;
+//       const theproduct = await productModel.findOne({
+//         _id: productId,
+//         $or: [
+//           { sellerID: req.seller._id },
+//           {
+//             sellerID: process.env.WALMART_SELLER_ID,
+//             _id: productId,
+//           },
+//         ],
+//       });
+//       if (theproduct) {
+//         const product = await productModel.findByIdAndUpdate(
+//           productId,
+//           { isActive },
+//           { new: true }
+//         );
+//         res.status(200).json(product);
+//       } else {
+//         res.json("you are not the product owner");
+//       }
+//     } else {
+//       res.status(500).json({ error: "create seller account" });
+//     }
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
-// for seller dashboard
 const getProductByID = async (req, res, next) => {
   try {
-    const allProducts = await productModel
-      .findById(req.params.id)
-      .populate("sellerID", "businessName")
-      .populate("departmentID", "name")
-      .populate("subDepartmentID", "name")
-      .populate("nestedSubDepartment", "name");
-    res.status(200).json(allProducts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-//for users website
-const getProductBySeller = async (req, res, next) => {
-  try {
-    const products = await productModel.find({
-      sellerID: req.params.id,
-    });
+    const products = await productModel.findById(req.params.id);
     // .populate("sellerID", "businessName")
     // .populate("departmentID", "name")
     // .populate("subDepartmentID", "name")
-    // .populate("nestedSubDepartment", "name")
+    // .populate("nestedSubDepartment", "name");
     res.status(200).json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+// for seller dashboard
+const getProductBySeller = async (req, res, next) => {
+  try {
+    if (req.role === "admin" || req.role === "seller") {
+      const products = await productModel.find({
+        sellerID: req.seller?._id || process.env.WALMART_SELLER_ID,
+      });
+      // .populate("sellerID", "businessName")
+      // .populate("departmentID", "name")
+      // .populate("subDepartmentID", "name")
+      // .populate("nestedSubDepartment", "name")
+      res.status(200).json(products);
+    } else {
+      res.status(500).json({ error: "create seller account" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//for users website
 const getActiveProductBySeller = async (req, res, next) => {
   try {
     const products = await productModel.find({
@@ -245,30 +315,39 @@ const getProductByDept = async (req, res, next) => {
 const updateProdudtByID = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const obj = req.body;
-    console.log(id, obj);
-    const updatedProduct = await productModel.findByIdAndUpdate(id, obj, {
-      new: true,
-    });
+    const theProduct = await productModel.findById(id);
 
-    // adding photos to cloudinary
-    // if (req.files) {
-    //   const files = req.files.photos;
-    //   const urls = [];
+    if (
+      (req.role === "admin" &&
+        theProduct.sellerID.equals(process.env.WALMART_SELLER_ID)) ||
+      (req.role === "seller" && theProduct.sellerID.equals(req.seller._id))
+    ) {
+      const obj = req.body;
+      const updatedProduct = await productModel.findByIdAndUpdate(id, obj, {
+        new: true,
+      });
 
-    //   for (const file of files) {
-    //     const result = await cloudinary.uploader.upload(file.tempFilePath, {
-    //       public_id: `${Date.now()}`,
-    //       resource_type: "auto",
-    //       folder: "images",
-    //     });
-    //     urls.push(result.url);
-    //   }
-    //   updatedProduct.photos = urls;
-    //   updatedProduct.mainPhoto = updatedProduct.photos[0];
-    // }
+      // adding photos to cloudinary
+      if (req.files) {
+        const files = req.files.photos;
+        const urls = [];
 
-    res.status(200).json(updatedProduct);
+        for (const file of files) {
+          const result = await cloudinary.uploader.upload(file.tempFilePath, {
+            public_id: `${Date.now()}`,
+            resource_type: "auto",
+            folder: "images",
+          });
+          urls.push(result.url);
+        }
+        updatedProduct.photos = urls;
+        updatedProduct.mainPhoto = updatedProduct.photos[0];
+      }
+
+      res.status(200).json(updatedProduct);
+    } else {
+      res.status(500).json({ message: "you are not product owner " });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -276,9 +355,17 @@ const updateProdudtByID = async (req, res, next) => {
 
 const deleteProductByID = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    await productModel.deleteOne({ _id: id });
-    res.status(200).json("Product deleted successfully");
+    if (
+      (req.role === "admin" &&
+        theProduct.sellerID.equals(process.env.WALMART_SELLER_ID)) ||
+      (req.role === "seller" && theProduct.sellerID.equals(req.seller._id))
+    ) {
+      const { id } = req.params;
+      await productModel.deleteOne({ _id: id });
+      res.status(200).json("Product deleted successfully");
+    } else {
+      res.status(500).json({ message: "you are not product owner " });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

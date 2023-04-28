@@ -1,21 +1,27 @@
-const express = require('express')
-const { getAllDepartments,AddnewDep,getDepById,updateDepById,deleteDepartment } = require('../controllers/department');
-const router = express.Router()
+const express = require("express");
+const {
+  getAllDepartments,
+  AddnewDep,
+  getDepById,
+  updateDepById,
+  deleteDepartment,
+} = require("../controllers/department");
+const router = express.Router();
+const auth = require("../middlewares/auth");
 
 // get all departments
-router.get("/", getAllDepartments)
+router.get("/", getAllDepartments);
 
 // get department by id
-router.get("/:id",getDepById)
+router.get("/:id", getDepById);
 
 // add new department
-router.post("/", AddnewDep)
+router.post("/", auth, AddnewDep);
 
 // update department
-router.patch("/:id",updateDepById)
+router.patch("/:id", auth, updateDepById);
 
 // delete department
-router.delete("/:id", deleteDepartment);
+router.delete("/:id", auth, deleteDepartment);
 
-module.exports = router
-
+module.exports = router;

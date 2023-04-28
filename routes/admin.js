@@ -8,23 +8,24 @@ const {
   loginAdmin,
 } = require("../controllers/admin");
 const router = express.Router();
+const auth = require("../middlewares/auth");
 
 // get all admins
-router.get("/", getAllAdmins);
+router.get("/", auth, getAllAdmins);
 
 // get admin by id
-router.get("/:id", getAdminById);
+router.get("/:id", auth, getAdminById);
 
 // add new admin
-router.post("/", AddnewAdmin);
+router.post("/", auth, AddnewAdmin);
 
 // add new admin
 router.post("/login", loginAdmin);
 
 // update admin
-router.patch("/:id", updateAdminById);
+router.patch("/:id", auth, updateAdminById);
 
 // delete admin
-router.delete("/:id", deleteAdminById);
+router.delete("/:id", auth, deleteAdminById);
 
 module.exports = router;
