@@ -12,6 +12,20 @@ const getAllSubDeps = async (req, res, next) => {
     res.json({ message: err.message });
   }
 };
+
+//Get All SubDepartments with same parent
+const getSubDepsByParent = async (req, res, next) => {
+  try {
+    const { parentID } = req.params;
+    const subDepartments = await SubDepartmentModel.find({ parentID }).populate(
+      "parentID",
+      "name"
+    );
+    res.status(200).json(subDepartments);
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+};
 //Get subDepartment by id
 const getSubDepById = async (req, res, next) => {
   const { id } = req.params;
@@ -76,6 +90,7 @@ const deleteSubDepartment = async (req, res) => {
 module.exports = {
   AddnewSubDep,
   getAllSubDeps,
+  getSubDepsByParent,
   getSubDepById,
   updateSubDepById,
   deleteSubDepartment,
