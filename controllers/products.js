@@ -1,15 +1,23 @@
 const productModel = require("../models/products");
+const productToApprovalModel = require("../models/productToApproval");
 const cloudinary = require("cloudinary");
+
 const { filterProducts } = require("../utils/filterProducts");
 
 //TODO: admin confirmation first
 const addProduct = async (req, res, next) => {
   try {
     if (req.role === "seller" || req.role === "admin") {
-      const product = new productModel({
-        ...req.body,
-        sellerID: req.seller?._id || process.env.WALMART_SELLER_ID,
-      });
+      const product =
+        req.role === "admin"
+          ? new productModel({
+              ...req.body,
+              sellerID: process.env.WALMART_SELLER_ID,
+            })
+          : new productToApprovalModel({
+              ...req.body,
+              sellerID: req.seller._id,
+            });
 
       // adding photos to cloudinary
       if (req.files && req.files.photos) {
@@ -99,38 +107,6 @@ const changeProductActivity = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
-// const changeProductActivity = async (req, res, next) => {
-//   try {
-//     if (req.role === "seller" || req.role === "admin") {
-//       const productId = req.params.id;
-//       const { isActive } = req.body;
-//       const theproduct = await productModel.findOne({
-//         _id: productId,
-//         $or: [
-//           { sellerID: req.seller._id },
-//           {
-//             sellerID: process.env.WALMART_SELLER_ID,
-//             _id: productId,
-//           },
-//         ],
-//       });
-//       if (theproduct) {
-//         const product = await productModel.findByIdAndUpdate(
-//           productId,
-//           { isActive },
-//           { new: true }
-//         );
-//         res.status(200).json(product);
-//       } else {
-//         res.json("you are not the product owner");
-//       }
-//     } else {
-//       res.status(500).json({ error: "create seller account" });
-//     }
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 const getProductByID = async (req, res, next) => {
   try {
@@ -250,8 +226,10 @@ const updateProdudtByID = async (req, res, next) => {
       });
 
       // adding photos to cloudinary
-      if (req.files) {
-        const files = req.files.photos;
+      if (req.files && req.files.photos) {
+        const files = Array.isArray(req.files.photos)
+          ? req.files.photos
+          : [req.files.photos];
         const urls = [];
 
         for (const file of files) {
@@ -262,9 +240,11 @@ const updateProdudtByID = async (req, res, next) => {
           });
           urls.push(result.url);
         }
-        updatedProduct.photos = urls;
-        updatedProduct.mainPhoto = updatedProduct.photos[0];
+        product.photos = urls;
+        product.mainPhoto = product.photos[0];
       }
+
+      await product.save();
 
       res.status(200).json(updatedProduct);
     } else {

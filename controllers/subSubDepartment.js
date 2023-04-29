@@ -11,6 +11,19 @@ const getAllSubDeps = async (req, res, next) => {
     res.json({ message: err.message });
   }
 };
+
+//Get All SubDepartments
+const getSubDepsByParent = async (req, res, next) => {
+  try {
+    const { parentID } = req.params;
+    const subDepartments = await subSubDepartmentModel
+      .find({ parentID })
+      .populate("parentID", "name");
+    res.status(200).json(subDepartments);
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+};
 //Get subDepartment by id
 const getSubDepById = async (req, res, next) => {
   const { id } = req.params;
@@ -23,6 +36,7 @@ const getSubDepById = async (req, res, next) => {
     res.json({ message: err.message });
   }
 };
+
 //Add new subDepartment
 const AddnewSubDep = async (req, res, next) => {
   try {
@@ -79,6 +93,7 @@ const deleteSubDepartment = async (req, res) => {
 
 module.exports = {
   AddnewSubDep,
+  getSubDepsByParent,
   getAllSubDeps,
   getSubDepById,
   updateSubDepById,

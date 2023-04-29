@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getAllSubDeps,
+  getSubDepsByParent,
   AddnewSubDep,
   getSubDepById,
   updateSubDepById,
@@ -12,6 +13,9 @@ const router = express.Router();
 
 //Get All SubDepartments
 router.get("/", getAllSubDeps);
+
+//Get All SubDepartments
+router.get("/parentId/:parentID", getSubDepsByParent);
 
 //Get subDepartment by id
 router.get("/:id", getSubDepById);

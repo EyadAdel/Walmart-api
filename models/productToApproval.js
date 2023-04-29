@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
 
-const productSchema = mongoose.Schema(
+const productToApprovalSchema = mongoose.Schema(
   {
     name: {
       ar: {
         type: String,
+        required: true,
       },
       en: {
         type: String,
+        required: true,
       },
     },
     priceBefore: Number,
@@ -15,9 +17,11 @@ const productSchema = mongoose.Schema(
     brand: {
       ar: {
         type: String,
+        required: true,
       },
       en: {
         type: String,
+        required: true,
       },
     },
     quantity: {
@@ -86,12 +90,8 @@ const productSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-// delete product reviews when product removed
-productSchema.pre("remove", async function (next) {
-  const product = this;
-  await Review.deleteMany({ productID: product._id });
-  next();
-});
-
-const productModel = mongoose.model("product", productSchema);
-module.exports = productModel;
+const productToApprovalModel = mongoose.model(
+  "productToApproval",
+  productToApprovalSchema
+);
+module.exports = productToApprovalModel;
