@@ -1,5 +1,9 @@
 const customerModel = require("../models/customer");
 const bcrypt = require("bcrypt");
+const shortid = require("shortid");
+const productModel = require("../models/products");
+
+//--------------------Login----------------------//
 
 const customerLogin = async (req, res, next) => {
   try {
@@ -46,10 +50,7 @@ const AddnewCustomer = async (req, res, next) => {
   }
 };
 
-//TODO: complete it after adding token
-// const addAddress = async (req, res) => {
-//   const address = req.body;
-// };
+//-------------------CRUD-----------------------//
 
 const getAllCustomers = async (req, res, next) => {
   try {
@@ -116,6 +117,214 @@ const deleteCustomerById = async (req, res, next) => {
   }
 };
 
+//-----------------Address-------------------------//
+const addAddress = async (req, res) => {
+  try {
+    if (req.role === "customer") {
+      const customer = req.customer;
+      const address = req.body;
+
+      // Generate a unique ID for the new address
+      address._id = shortid.generate();
+
+      customer.address.push(address);
+      await customer.save();
+      res.status(200).json({ message: "Address added successfully" });
+    } else {
+      res.status(500).json("you not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteAddress = async (req, res) => {
+  try {
+    if (req.role === "customer") {
+      const customerId = req.customer._id;
+      const addressId = req.params.addressId;
+
+      const customer = await customerModel.findById(customerId);
+
+      // Find the index of the address to be deleted
+      const addressIndex = customer.address.findIndex(
+        (address) => address._id.toString() === addressId
+      );
+      // If the address is not found, return a 404 Not Found response
+      if (addressIndex === -1) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      customer.address.splice(addressIndex, 1);
+      await customer.save();
+
+      res.status(200).json({ message: "Address deleted successfully" });
+    } else {
+      res.status(500).json("you not a customer");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+//------------------Favorites------------------------//
+const addToFav = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const customer = req.customer;
+      const product = await productModel.findById(req.params.productId);
+      if (!product) {
+        res.status(404).send("Product not found");
+        return;
+      }
+      // check if item already added
+      if (customer.lists.favorites.indexOf(product._id) === -1) {
+        customer.lists.favorites.push(product._id);
+        await customer.save();
+      }
+      res.status(200).json("product added");
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteFromFav = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const customer = req.customer;
+      const product = await productModel.findById(req.params.productId);
+      if (!product) {
+        res.status(404).send("Product not found");
+        return;
+      }
+      // check if item not in fav
+      if (customer.lists.favorites.indexOf(product._id) === -1) {
+        return;
+      }
+      const productIndex = customer.lists.favorites.indexOf(product._id);
+      customer.lists.favorites.splice(productIndex, 1);
+      await customer.save();
+      res.status(200).json("product deleted");
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getAllFavProducts = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const customer = req.customer.populate("lists.favorites");
+      res.json(customer.lists.favorites);
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error retrieving favorite products: " + err.message);
+  }
+};
+
+//------------------Cart------------------------//
+const addToCart = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const { productId, quantity } = req.body;
+      const customer = req.customer;
+      // Check if the product is already in the cart
+      const cartItem = customer.cart.find(
+        (cartItem) => cartItem.product.toString() === productId
+      );
+
+      if (cartItem) {
+        cartItem.quantity += quantity;
+      } else {
+        customer.cart.push({ product: productId, quantity });
+      }
+      await customer.save();
+
+      res.status(200).json({
+        message: "Product added to cart successfully",
+        cart: customer.cart,
+      });
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteFromCart = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const productId = req.params.productId;
+      const customer = req.customer;
+
+      const cartItemIndex = customer.cart.findIndex(
+        (cartItem) => cartItem._id.toString() === productId
+      );
+      if (cartItemIndex === -1) {
+        return res.status(404).json({ message: "Cart item not found" });
+      }
+      customer.cart.splice(cartItemIndex, 1);
+      await customer.save();
+
+      res.status(200).json({ message: "Cart item deleted successfully" });
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const deleteAllFromCart = async (req, res) => {
+  try {
+    if (req.role === "customer") {
+      const customer = req.customer;
+
+      customer.cart = [];
+      await customer.save();
+
+      res.status(200).json({ message: "Cart cleared successfully" });
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const editItemQnty = async (req, res, next) => {
+  try {
+    if (req.role === "customer") {
+      const productId = req.params.productId;
+      const customer = req.customer;
+      const { quantity } = req.body;
+
+      const cartItem = customer.cart.find(
+        (cartItem) => cartItem._id.toString() === productId
+      );
+      if (!cartItem) {
+        return res.status(404).json({ message: "Cart item not found" });
+      }
+      cartItem.quantity = quantity;
+      await customer.save();
+
+      res.status(200).json({ message: "Cart item updated successfully" });
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 module.exports = {
   customerLogin,
   checkPass,
@@ -124,4 +333,13 @@ module.exports = {
   getCustomerByEmail,
   updateCustomerById,
   deleteCustomerById,
+  addAddress,
+  deleteAddress,
+  addToFav,
+  deleteFromFav,
+  getAllFavProducts,
+  addToCart,
+  deleteFromCart,
+  deleteAllFromCart,
+  editItemQnty,
 };
