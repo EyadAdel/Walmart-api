@@ -55,6 +55,7 @@ const customerSchema = mongoose.Schema(
     // },
     address: [
       {
+        _id: String,
         street: String,
         city: String,
         state: String,
