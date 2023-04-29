@@ -35,6 +35,6 @@ router.delete("/:id", auth, deleteSeller);
 
 router.get("/orders", auth, getSellerOrders);
 
-router.put("/orders", auth, confirmOrderStatus);
+router.put("/orders/:id", auth, confirmOrderStatus);
 
 module.exports = router;

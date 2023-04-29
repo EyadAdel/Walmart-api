@@ -12,8 +12,10 @@ const addProduct = async (req, res, next) => {
       });
 
       // adding photos to cloudinary
-      if (req.files) {
-        const files = req.files.photos;
+      if (req.files && req.files.photos) {
+        const files = Array.isArray(req.files.photos)
+          ? req.files.photos
+          : [req.files.photos];
         const urls = [];
 
         for (const file of files) {

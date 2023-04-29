@@ -7,10 +7,12 @@ const {
   updatedReview,
   deletedReview,
 } = require("../controllers/reviews");
+const auth = require("../middlewares/auth");
+
 const router = express.Router();
 
 //Create Review
-router.post("/", createdReview);
+router.post("/", auth, createdReview);
 
 //Get All Reviews
 router.get("/", getAllReviews);
@@ -22,9 +24,9 @@ router.get("/product/:id", getAllProductReviews);
 router.get("/seller/:id", getAllSellerReviews);
 
 //To update Review
-router.patch("/:id", updatedReview);
+router.patch("/:id", auth, updatedReview);
 
 //To Delete Review
-router.delete("/:id", deletedReview);
+router.delete("/:id", auth, deletedReview);
 
 module.exports = router;

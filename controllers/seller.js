@@ -103,8 +103,8 @@ const deleteSeller = async (req, res) => {
 
 const getSellerOrders = async (req, res) => {
   try {
-    if (req.role === "seller") {
-      const id = req.seller._id;
+    if (req.role === "seller" || req.role === "admin") {
+      const id = req.seller?._id || process.env.WALMART_SELLER_ID;
       const seller = await sellerModel
         .findById(id)
         .populate("orders.products", "name priceAfter")
@@ -131,15 +131,16 @@ const getSellerOrders = async (req, res) => {
 
 const confirmOrderStatus = async (req, res) => {
   try {
-    if (req.role === "seller") {
-      const id = req.seller._id;
-      const { status, sellerID } = req.body;
+    if (req.role === "seller" || req.role === "admin") {
+      const sellerId = req.seller?._id || process.env.WALMART_SELLER_ID;
+      const orderId = req.params.id;
+      const { status } = req.body;
 
-      const seller = await sellerModel.findById(sellerID);
+      const seller = await sellerModel.findById(sellerId);
 
       // Find the order and product index
       const orderIndex = seller.orders.findIndex(
-        (order) => order._id.toString() === id
+        (order) => order._id.toString() === orderId
       );
       seller.orders[orderIndex].status = status;
       await seller.save();
