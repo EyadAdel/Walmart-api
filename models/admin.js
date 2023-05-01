@@ -44,6 +44,7 @@ var adminSchema = mongoose.Schema(
       type: String,
       default: "Adminstrator",
     },
+    tokens: [{ type: Object }],
   },
   { timestamps: true }
 );
@@ -70,7 +71,6 @@ adminSchema.methods.generateAuthToken = async function () {
   });
   admin.tokens = admin.tokens.concat({ token });
   await admin.save();
-  console.log(4);
   return token;
 };
 
