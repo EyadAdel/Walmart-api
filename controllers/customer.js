@@ -25,10 +25,12 @@ const customerLogin = async (req, res, next) => {
 const checkPass = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const customer = await customerModel.findOne({ email });
+    const customer = await customerModel
+      .findOne({ email })
+      .populate("cart.product");
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
-      res.status(401).send("Invalid password");
+      res.send(isMatch);
       return;
     }
     const token = await customer.generateAuthToken();
@@ -42,9 +44,10 @@ const checkPass = async (req, res) => {
 const AddnewCustomer = async (req, res, next) => {
   try {
     const customerData = req.body;
-    const newCustomer = await customerModel.create(customerData);
-    const token = await newCustomer.generateAuthToken();
-    res.status(201).json({ newCustomer, token });
+    const customer = await customerModel.create(customerData);
+    await customer.populate("cart.product").execPopulate();
+    const token = await customer.generateAuthToken();
+    res.status(201).json({ customer, token });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -235,9 +238,11 @@ const addToCart = async (req, res, next) => {
     if (req.role === "customer") {
       const { productId, quantity } = req.body;
       const customer = req.customer;
+
       // Check if the product is already in the cart
+      console.log(customer.cart);
       const cartItem = customer.cart.find(
-        (cartItem) => cartItem.product.toString() === productId
+        (cartItem) => cartItem.product?.toString() === productId
       );
 
       if (cartItem) {
