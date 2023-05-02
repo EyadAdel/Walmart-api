@@ -149,17 +149,14 @@ const createOrder = async (req, res) => {
 const updateOrderStatus = async (req, res, next) => {
   try {
     if (req.role == "admin") {
-      const { orderId } = req.params;
-      const { status } = req.body;
-
       // Find the order in the database and update its status
-      const order = await orderModel.findOneAndUpdate(
-        { _id: orderId },
-        { $set: { status: status } },
-        { new: true }
-      );
+      const { id } = req.params;
+      const obj = req.body;
+      const updatedOrder = await orderModel.findByIdAndUpdate(id, obj, {
+        new: true,
+      });
 
-      res.status(200).json({ message: "Order status updated successfully" });
+      res.status(200).json(updatedOrder);
     } else {
       res.status(400).send(`Only admin has access to here`);
     }
