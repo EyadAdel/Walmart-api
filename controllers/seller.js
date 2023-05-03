@@ -86,7 +86,7 @@ const deleteSeller = async (req, res) => {
       req.role === "admin"
     ) {
       const id = req.params.id;
-      if (id.equals(process.env.WALMART_SELLER_ID)) {
+      if (id == process.env.WALMART_SELLER_ID) {
         return res.json("no one can delete walmart seller account!!");
       }
       await sellerModel.findByIdAndDelete(id);
