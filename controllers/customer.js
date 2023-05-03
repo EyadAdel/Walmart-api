@@ -281,6 +281,39 @@ const addToCart = async (req, res, next) => {
   }
 };
 
+const getCartItems = async (req, res, next) => {
+  console.log(1);
+  try {
+    if (req.role === "customer") {
+      console.log(req.customer);
+      const customer = req.customer;
+      console.log(customer.cart);
+
+      // Populate the product details for each item in the cart
+      const cart = await Promise.all(
+        customer.cart.map(async (cartItem) => {
+          const product = await productModel.findById(cartItem.product);
+          return {
+            product: {
+              _id: product._id,
+              name: product.name,
+              mainPhoto: product.mainPhoto,
+              priceAfter: product.priceAfter,
+            },
+            quantity: cartItem.quantity,
+            _id: cartItem._id,
+          };
+        })
+      );
+      res.status(200).json({ m: "any", cart });
+    } else {
+      res.status(500).json("you are not a customer");
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const deleteFromCart = async (req, res, next) => {
   try {
     if (req.role === "customer") {
@@ -398,6 +431,7 @@ module.exports = {
   deleteFromFav,
   getAllFavProducts,
   addToCart,
+  getCartItems,
   deleteFromCart,
   deleteAllFromCart,
   editItemQnty,

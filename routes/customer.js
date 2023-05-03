@@ -14,6 +14,7 @@ const {
   deleteFromFav,
   getAllFavProducts,
   addToCart,
+  getCartItems,
   deleteFromCart,
   deleteAllFromCart,
   editItemQnty,
@@ -34,7 +35,7 @@ router.post("/signup", AddnewCustomer);
 router.get("/", auth, getAllCustomers);
 
 //Get sepcific customer by email
-router.get("/:email", getCustomerByEmail);
+router.get("/email/:email", getCustomerByEmail);
 
 //Update in any field of specific customer by Id
 router.patch("/:id", auth, updateCustomerById);
@@ -63,6 +64,9 @@ router.get("/favorites", auth, getAllFavProducts);
 //------------------Cart------------------------//
 // adding product to cart
 router.post("/cart", auth, addToCart);
+
+// get cart items
+router.get("/cart", auth, getCartItems);
 
 // deleting product from cart
 router.delete("/cart/:productId", auth, deleteFromCart);
