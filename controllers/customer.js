@@ -252,9 +252,26 @@ const addToCart = async (req, res, next) => {
       }
       await customer.save();
 
+      // Populate the product details for each item in the cart
+      const cart = await Promise.all(
+        customer.cart.map(async (cartItem) => {
+          const product = await productModel.findById(cartItem.product);
+          return {
+            product: {
+              _id: product._id,
+              name: product.name,
+              mainPhoto: product.mainPhoto,
+              priceAfter: product.priceAfter,
+            },
+            quantity: cartItem.quantity,
+            _id: cartItem._id,
+          };
+        })
+      );
+
       res.status(200).json({
         message: "Product added to cart successfully",
-        cart: customer.cart,
+        cart: cart,
       });
     } else {
       res.status(500).json("you are not a customer");
