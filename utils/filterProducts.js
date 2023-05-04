@@ -53,10 +53,10 @@ const filterProducts = async (query, numOfProducts) => {
 
   const products = await productModel
     .find(filters)
-    // .populate("sellerID", "businessName")
-    // .populate("departmentID", "name")
-    // .populate("subDepartmentID", "name")
-    // .populate("nestedSubDepartment", "name")
+    .populate("sellerID", "businessName")
+    .populate("departmentID", "name")
+    .populate("subDepartmentID", "name")
+    .populate("nestedSubDepartment", "name")
     .sort(sort)
     .skip(skip)
     .limit(pageSize);
