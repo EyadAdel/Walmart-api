@@ -23,17 +23,41 @@ const getAllOrders = async (req, res, next) => {
   }
 };
 
+//const getAllUserOrders = async (req, res, next) => {
+//  try {
+//    if (req.role === "customer") {
+//      const order = await orderModel.find({ customerID: req.customer?._id })
+//      // .populate("customerID", "firstName email");
+//      // console.log(typeof newOrder);
+//      // for (const order of newOrder) {
+//      //   const totalPrice = await order.totalPrice;
+//      //   console.log(totalPrice);
+//      // }
+//      res.status(200).json(order);
+//    } else {
+//      res.status(500).json({ message: `this is not your account` });
+//    }
+//  } catch (err) {
+//    res.json({ message: err.message });
+//  }
+//};
+
 const getAllUserOrders = async (req, res, next) => {
   try {
     if (req.role === "customer") {
-      const newOrder = await orderModel.find({ customerID: req.customer?._id });
-      // .populate("customerID", "firstName email");
-      // console.log(typeof newOrder);
-      // for (const order of newOrder) {
-      //   const totalPrice = await order.totalPrice;
-      //   console.log(totalPrice);
-      // }
-      res.status(200).json(newOrder);
+      const orders = await orderModel
+        .find({ customerID: req.customer?._id })
+        .populate("items.product", "name priceAfter mainPhoto");
+
+//      const populatedOrders = orders.map(order => {
+//        const populatedItems = order.items.map(item => ({
+//          ...item.toObject(),
+//          product: item.product.toObject()
+//        }));
+//        return { ...order.toObject(), items: populatedItems };
+//      });
+
+      res.status(200).json(orders);
     } else {
       res.status(500).json({ message: `this is not your account` });
     }

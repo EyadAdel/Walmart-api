@@ -203,7 +203,6 @@ const getProductByDept = async (req, res, next) => {
       totalPages,
       totalProducts,
     });
-    res.status(200).json(products);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err });
@@ -257,12 +256,20 @@ const updateProdudtByID = async (req, res, next) => {
 
 const deleteProductByID = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    console.log(id);
+    const product = await productModel.findById(id);
+    console.log(product);
+    console.log(product.sellerID, req.seller);
+    // if (
+    //   (req.role === "admin" &&
+    //     product.sellerID.equals(process.env.WALMART_SELLER_ID)) ||
+    //   (req.role === "seller" && product.sellerID.equals(req.seller?._id))
+    // ) {
     if (
-      (req.role === "admin" &&
-        theProduct.sellerID.equals(process.env.WALMART_SELLER_ID)) ||
-      (req.role === "seller" && theProduct.sellerID.equals(req.seller._id))
+      req.role === "admin" ||
+      (req.role === "seller" && product.sellerID.equals(req.seller?._id))
     ) {
-      const { id } = req.params;
       await productModel.deleteOne({ _id: id });
       res.status(200).json("Product deleted successfully");
     } else {

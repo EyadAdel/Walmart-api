@@ -53,6 +53,35 @@ const AddnewCustomer = async (req, res, next) => {
   }
 };
 
+const logoutCustomer = async (req, res) => {
+  try {
+    if (req.role === "customer") {
+      req.customer.tokens = req.customer.tokens.filter((token) => {
+        return token.token !== req.token;
+      });
+      await req.customer.save();
+      res.send();
+    } else {
+      res.status(500).json("you not a customer");
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+const logoutAllDevices = async (req, res) => {
+  try {
+    if (req.role === "customer") {
+      req.seller.tokens = [];
+      await req.seller.save();
+      res.send();
+    } else {
+      res.status(500).json("you not a customer");
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
 //-------------------CRUD-----------------------//
 
 const getAllCustomers = async (req, res, next) => {
@@ -282,12 +311,9 @@ const addToCart = async (req, res, next) => {
 };
 
 const getCartItems = async (req, res, next) => {
-  console.log(1);
   try {
     if (req.role === "customer") {
-      console.log(req.customer);
       const customer = req.customer;
-      console.log(customer.cart);
 
       // Populate the product details for each item in the cart
       const cart = await Promise.all(
@@ -305,7 +331,7 @@ const getCartItems = async (req, res, next) => {
           };
         })
       );
-      res.status(200).json({ m: "any", cart });
+      res.status(200).json({ cart });
     } else {
       res.status(500).json("you are not a customer");
     }
@@ -421,6 +447,8 @@ module.exports = {
   customerLogin,
   checkPass,
   AddnewCustomer,
+  logoutCustomer,
+  logoutAllDevices,
   getAllCustomers,
   getCustomerByEmail,
   updateCustomerById,

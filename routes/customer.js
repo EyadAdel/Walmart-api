@@ -3,6 +3,8 @@ const router = express.Router();
 const {
   AddnewCustomer,
   checkPass,
+  logoutCustomer,
+  logoutAllDevices,
   getAllCustomers,
   getCustomerByEmail,
   updateCustomerById,
@@ -29,6 +31,12 @@ router.post("/signin", checkPass);
 
 //To Create new Customer
 router.post("/signup", AddnewCustomer);
+
+// Logout a customer from this device
+router.post("/logout", auth, logoutCustomer);
+
+// Logout from all devices
+router.post("/logoutAll", auth, logoutAllDevices);
 
 //-------------------CRUD-----------------------//
 //Get all customers
