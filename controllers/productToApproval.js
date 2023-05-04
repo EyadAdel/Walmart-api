@@ -4,7 +4,7 @@ const productToApprovalModel = require("../models/productToApproval");
 const getAllProductsApprove = async (req, res, next) => {
   try {
     if (req.role === "admin") {
-      const products = await productToApprovalModel.find();
+      const products = await productToApprovalModel.find().populate("sellerID", "businessName")
       res.status(200).json(products);
     } else {
       res.status(400).json("only admin can access");
