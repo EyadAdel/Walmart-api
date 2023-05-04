@@ -12,6 +12,20 @@ const getAllSubDeps = async (req, res, next) => {
     res.json({ message: err.message });
   }
 };
+
+//Get All SubDepartments with same parent
+const getSubDepsByParent = async (req, res, next) => {
+  try {
+    const { parentID } = req.params;
+    const subDepartments = await SubDepartmentModel.find({ parentID }).populate(
+      "parentID",
+      "name"
+    );
+    res.status(200).json(subDepartments);
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+};
 //Get subDepartment by id
 const getSubDepById = async (req, res, next) => {
   const { id } = req.params;
@@ -27,10 +41,14 @@ const getSubDepById = async (req, res, next) => {
 };
 //Add new subDepartment
 const AddnewSubDep = async (req, res, next) => {
-  const newSubDepartment = req.body;
   try {
-    const addededSubDep = await SubDepartmentModel.create(newSubDepartment);
-    res.status(201).json(addededSubDep);
+    if (req.role === "admin") {
+      const newSubDepartment = req.body;
+      const addededSubDep = await SubDepartmentModel.create(newSubDepartment);
+      res.status(201).json(addededSubDep);
+    } else {
+      res.status(500).json("you not admin");
+    }
   } catch (err) {
     res.status(422).json({ message: err.message });
   }
@@ -38,13 +56,17 @@ const AddnewSubDep = async (req, res, next) => {
 
 //Update subDepartment
 const updateSubDepById = async (req, res) => {
-  const id = req.params.id;
-  const obj = req.body;
   try {
-    let updatedSubDep = await SubDepartmentModel.findByIdAndUpdate(id, obj, {
-      new: true,
-    });
-    res.json(updatedSubDep);
+    if (req.role === "admin") {
+      const id = req.params.id;
+      const obj = req.body;
+      let updatedSubDep = await SubDepartmentModel.findByIdAndUpdate(id, obj, {
+        new: true,
+      });
+      res.json(updatedSubDep);
+    } else {
+      res.status(500).json("you not admin");
+    }
   } catch (err) {
     res.status(422).json({ message: err.message });
   }
@@ -52,10 +74,14 @@ const updateSubDepById = async (req, res) => {
 
 //Delete SubDepartment
 const deleteSubDepartment = async (req, res) => {
-  const id = req.params.id;
   try {
-    await SubDepartmentModel.findByIdAndDelete(id);
-    res.json("Sub-Department Deleted Successfully");
+    if (req.role === "admin") {
+      const id = req.params.id;
+      await SubDepartmentModel.findByIdAndDelete(id);
+      res.json("Sub-Department Deleted Successfully");
+    } else {
+      res.status(500).json("you not admin");
+    }
   } catch (err) {
     res.status(422).json({ message: err.message });
   }
@@ -64,6 +90,7 @@ const deleteSubDepartment = async (req, res) => {
 module.exports = {
   AddnewSubDep,
   getAllSubDeps,
+  getSubDepsByParent,
   getSubDepById,
   updateSubDepById,
   deleteSubDepartment,

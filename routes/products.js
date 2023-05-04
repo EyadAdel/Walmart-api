@@ -11,18 +11,20 @@ const {
   updateProdudtByID,
   deleteProductByID,
 } = require("../controllers/products");
-const router = express.Router();
 const cloudinary = require("cloudinary");
 const fileUpload = require("express-fileupload");
+const auth = require("../middlewares/auth");
+
+const router = express.Router();
 
 //Get All Products
-router.get("/all", getAllProducts);
+router.get("/all", auth, getAllProducts);
 
 //Get All Active Products
 router.get("/", getAllActiveProducts);
 
 //change product activity
-router.put("/activity/:id", changeProductActivity);
+router.put("/activity/:id", auth, changeProductActivity);
 
 //Get Products by id
 router.get("/:id", getProductByID);
@@ -31,13 +33,13 @@ router.get("/:id", getProductByID);
 router.get("/dept/:id", getProductByDept);
 
 // Get all product by seller
-router.get("/seller/all/:id", getProductBySeller);
+router.get("/seller/all", auth, getProductBySeller);
 
 // Get the products by seller
 router.get("/seller/:id", getActiveProductBySeller);
 
 //To Delete specific Product
-router.delete("/:id", deleteProductByID);
+router.delete("/:id", auth, deleteProductByID);
 
 // handle cloudinary middleware in routes that need to upload photos
 router.use(
@@ -54,9 +56,9 @@ cloudinary.config({
 });
 
 //Add New Product
-router.post("/", addProduct);
+router.post("/", auth, addProduct);
 
 //To update in specific product (update in any field)
-router.patch("/:id", updateProdudtByID);
+router.patch("/:id", auth, updateProdudtByID);
 
 module.exports = router;

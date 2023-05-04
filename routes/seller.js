@@ -9,13 +9,15 @@ var {
   getSellerOrders,
   confirmOrderStatus,
 } = require("../controllers/seller");
+const auth = require("../middlewares/auth");
+
 var router = express.Router();
 
 // get all sellers
-router.get("/", getAllSellers);
+router.get("/", auth, getAllSellers);
 
 // Get seller by id
-router.get("/:id", getSellerById);
+router.get("/sellerid/:id", getSellerById);
 
 // Login a seller
 router.post("/login", loginSeller);
@@ -24,16 +26,15 @@ router.post("/login", loginSeller);
 router.post("/", AddnewSeller);
 
 // Update seller
-router.patch("/:id", updateSellerById);
+router.patch("/:id", auth, updateSellerById);
 
 // Delete Seller
-router.delete("/:id", deleteSeller);
+router.delete("/:id", auth, deleteSeller);
 
 //-----------------------------------//
 
-//TODO: delete the :id after auth
-router.get("/orders/:id", getSellerOrders);
+router.get("/orders", auth, getSellerOrders);
 
-router.put("/orders/:id", confirmOrderStatus);
+router.put("/orders/:id", auth, confirmOrderStatus);
 
 module.exports = router;
